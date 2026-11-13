@@ -58,7 +58,11 @@ function drawPage(letter, lines, index, count) {
     ctx.font = '23px "Noto Sans CJK SC", sans-serif';
     ctx.fillText('FROM  ' + String(letter.characterName || '').slice(0, 36), MARGIN, 243);
     ctx.textAlign = 'right';
-    ctx.fillText(String(letter.createdAt || '').slice(0, 10), W - MARGIN, 243);
+    const date = new Date(letter.createdAt);
+    const localDate = Number.isFinite(date.getTime())
+        ? [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-')
+        : String(letter.createdAt || '').slice(0, 10);
+    ctx.fillText(localDate, W - MARGIN, 243);
     ctx.textAlign = 'left';
     ctx.font = '32px "Songti SC", "Noto Serif CJK SC", "SimSun", serif';
     ctx.fillStyle = '#302d2a';
