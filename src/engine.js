@@ -1,3 +1,4 @@
+import { generateViaApi } from './api.js';
 // A letter is an isolated generation, not a SillyTavern chat message.
 export function recipients(context) {
     return (context.characters || [])
@@ -74,8 +75,7 @@ async function primaryLore(context, character, letter) {
     return { text: contents.join('\n\n'), included: contents.length, matched: selected.length };
 }
 
-export async function generateLetter(context, id, letter) {
-    if (typeof context.generateRaw !== 'function') throw new Error('当前酒馆不支持 generateRaw 独立生成。');
+export async function generateLetter(context, id, letter, profileId = '') {
     const c = await fullCharacter(context, id);
     const data = c.data || {};
     const lore = await primaryLore(context, c, letter.body);
@@ -106,7 +106,7 @@ export async function generateLetter(context, id, letter) {
         '--- END LETTER ---',
         'Respond with the letter only.',
     ].join('\n');
-    const response = await context.generateRaw({ systemPrompt, prompt });
+    const response = await generateViaApi(context, { systemPrompt, prompt, profileId });
     if (typeof response !== 'string' || !response.trim()) throw new Error('模型没有返回有效回信。');
     return { text: response.trim(), characterName: c.name, lore };
 }
