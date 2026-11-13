@@ -77,3 +77,31 @@
   #sal-root .sal-main h3 { font-size: 21px; }
   #sal-root textarea { min-height: 205px; }
 }
+
+
+/* v0.1.2: favorites, backups and autosaved letter drafts */
+#sal-root .sal-filters { display: flex; align-items: center; gap: 5px; }
+#sal-root .sal-filters button { flex: 1; padding: 7px 8px; min-height: 33px; background: transparent; border: 1px solid #d7ccbb; color: #756858; border-radius: 6px; font-size: 12px; }
+#sal-root .sal-filters button[aria-pressed="true"] { background: #e4d6c2; border-color: #b9a992; color: #473a29; font-weight: 700; }
+#sal-root .sal-filters button:hover { background: #eee3d3; }
+#sal-root .sal-item-row { display: flex; align-items: center; gap: 1px; min-width: 0; border-radius: 8px; }
+#sal-root .sal-item-row:hover { background: #eae0d0; }
+#sal-root .sal-item-row .sal-item { flex: 1; min-width: 0; }
+#sal-root .sal-star { flex: none; border: none; border-radius: 6px; background: transparent; color: #a49b8d; min-width: 33px; height: 36px; font-size: 23px; padding: 0 4px; line-height: 1; }
+#sal-root .sal-star[aria-pressed="true"] { color: #ad7d38; }
+#sal-root .sal-star:hover { color: #a8762f; background: #e9dcc9; }
+#sal-root .sal-actions #sal-detail-star[aria-pressed="true"] { color: #8d5f21; background: #f0ddae; border-color: #ccb27a; }
+#sal-root .sal-draft-hint { font-size: 11px; line-height: 1.5; color: #8a7962; margin: -3px 0 1px; }
+#sal-root .sal-backup { display: flex; gap: 5px; margin-top: 5px; border-top: 1px solid var(--sal-line); padding-top: 11px; }
+#sal-root .sal-backup button { flex: 1; min-width: 0; border: 1px solid #d8cbbb; border-radius: 6px; background: #f4eadb; color: #6a5844; font-size: 11px; padding: 8px 4px; }
+#sal-root .sal-backup button:hover { background: #e9dbc6; }
+#sal-root .sal-backup input[hidden] { display: none; }
+@media (max-width: 640px) {
+  #sal-root .sal-item-row { flex: 0 0 185px; min-width: 185px; }
+  #sal-root .sal-item-row .sal-item { flex: 1; }
+  #sal-root .sal-item-row .sal-star { min-width: 29px; }
+  #sal-root .sal-filters { justify-content: flex-start; }
+  #sal-root .sal-filters button { flex: none; min-width: 80px; }
+  #sal-root .sal-backup { padding-top: 7px; margin-top: 0; }
+  #sal-root .sal-backup button { padding: 6px; }
+}
