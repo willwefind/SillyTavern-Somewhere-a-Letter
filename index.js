@@ -116,6 +116,7 @@ function fillRecipients() {
 }
 function renderRecipientLabel() {
     el('recipient-current').textContent = state.selected ? '当前收件人：' + selectedName() : '尚未选择收件人';
+    el('compose-recipient').textContent = state.selected ? selectedName() : '尚未选择收件人';
     el('nav-character').disabled = !state.selected;
     el('nav-character').title = state.selected ? '查看 ' + selectedName() + ' 的信箱' : '请先搜索并选择角色';
 }
@@ -241,7 +242,7 @@ function filteredLetters() {
     return letters;
 }
 function updateNav() {
-    for (const view of ['all', 'starred', 'character', 'compose']) {
+    for (const view of ['all', 'starred', 'character']) {
         el('nav-' + view).setAttribute('aria-current', (state.view === view || (state.view === 'reading' && state.previousView === view)) ? 'page' : 'false');
     }
     const starred = state.items.filter(item => item.starred === true).length;
@@ -344,7 +345,7 @@ function updateDetailStar() {
     button.setAttribute('aria-pressed', String(starred));
 }
 function setView(view) {
-    if (!VIEWS.includes(view) || state.busy) return;
+    if (!VIEWS.includes(view) || (state.busy && view !== 'reading')) return;
     if (isArchiveView()) state.previousView = state.view;
     state.view = view;
     el('compose').hidden = view !== 'compose';
@@ -381,7 +382,7 @@ function setBusy(value) {
     el('send').textContent = value ? '正在等待回信…' : '寄出这封信';
     el('recipient-search').disabled = value;
     el('new').disabled = value;
-    for (const view of ['all', 'starred', 'character', 'compose']) el('nav-' + view).disabled = value || (view === 'character' && !state.selected);
+    for (const view of ['all', 'starred', 'character']) el('nav-' + view).disabled = value || (view === 'character' && !state.selected);
     el('settings').disabled = value;
     closeRecipients();
 }
@@ -575,7 +576,6 @@ function buildUi() {
     el('settings').addEventListener('click', () => setView('settings'));
     el('back').addEventListener('click', returnToList);
     el('new').addEventListener('click', () => setView('compose'));
-    el('nav-compose').addEventListener('click', () => setView('compose'));
     for (const view of ['all', 'starred', 'character']) {
         el('nav-' + view).addEventListener('click', () => setView(view));
     }
