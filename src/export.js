@@ -73,7 +73,7 @@ function drawPage(letter, lines, index, count) {
     return canvas;
 }
 
-export function exportAsPng(letter) {
+function createPageCanvases(letter) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('当前浏览器不支持图片导出。');
@@ -81,12 +81,54 @@ export function exportAsPng(letter) {
     const lines = breakText(ctx, letter.reply, W - MARGIN * 2);
     const pages = Math.max(1, Math.ceil(lines.length / PAGE_LINES));
     if (pages > 25) throw new Error('回信超过25页，请先复制文字保存。');
+    const canvases = [];
     for (let i = 0; i < pages; i++) {
-        const image = drawPage(letter, lines.slice(i * PAGE_LINES, (i + 1) * PAGE_LINES), i, pages);
-        const a = document.createElement('a');
-        a.href = image.toDataURL('image/png');
-        a.download = 'Somewhere-a-Letter-' + letter.id + (pages > 1 ? '-p' + (i + 1) : '') + '.png';
-        document.body.append(a); a.click(); a.remove();
+        canvases.push(drawPage(
+            letter, lines.slice(i * PAGE_LINES, (i + 1) * PAGE_LINES), i, pages));
     }
-    return pages;
+    return canvases;
+}
+
+/**
+ * Encode PNG as a proper binary file, not a data: URI.
+ * This is intentionally separate from initiating a browser download.
+ * On iOS, our UI will prepare once, then offer a second, real tap to
+ * invoke the native share sheet (File/Photos) or an image preview.
+ */
+export async function prepareReplyImages(letter) {
+    const pages = createPageCanvases(letter);
+    const files = [];
+    const safeId = String(letter.id || 'letter').replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 80);
+    for (let i = 0; i < pages.length; i++) {
+        const blob = await new Promise((resolve, reject) => {
+            pages[i].toBlob(result => result ? resolve(result)
+                : reject(new Error('第 ' + (i + 1) + ' 页无法编码为 PNG。')), 'image/png');
+        });
+        const suffix = pages.length > 1 ? '-p' + String(i + 1) : '';
+        files.push(new File([blob], 'Somewhere-a-Letter-' + safeId + suffix + '.png', {
+            type: 'image/png',
+            lastModified: Date.now(),
+        }));
+    }
+    return files;
+}
+
+/** Desktop browsers: Blob object URLs instead of data: download links. */
+export async function exportAsPng(letter) {
+    const files = await prepareReplyImages(letter);
+    for (const file of files) {
+        const url = URL.createObjectURL(file);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = file.name;
+        document.body.append(anchor);
+        anchor.click();
+        anchor.remove();
+        // Browser downloads are asynchronous: never revoke immediately.
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        if (files.length > 1) {
+            await new Promise(resolve => setTimeout(resolve, 180));
+        }
+    }
+    return files.length;
 }
