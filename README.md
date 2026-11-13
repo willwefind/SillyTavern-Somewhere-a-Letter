@@ -2,7 +2,7 @@
 
 一个轻量级 [SillyTavern](https://github.com/SillyTavern/SillyTavern) 前端扩展。给某个角色写一封信，收到独立回信，在自己的信箱里收藏和保存。
 
-> **v0.2.0 开发测试版**。v0.1.2 的角色搜索、寄信回信、草稿、收藏、JSON 备份与 PNG 导出已收到实机通过反馈；v0.2.0 的新界面和 API 连接选择还需要在不同酒馆设备上验证。
+> **v0.2.1 兼容性修订测试版**。根据 SillyTavern 1.19.0 PC 和手机使用反馈，改善 API 预设空列表提示与手机信箱入口。真实手机浏览器的兼容性仍需测试。
 
 ## 安装和更新
 
@@ -14,7 +14,20 @@ https://github.com/willwefind/SillyTavern-Somewhere-a-Letter
 
 已安装用户：打开 **扩展 → 管理扩展（Manage Extensions）**，找到 Somewhere, a Letter → **检查/安装更新**，完成后刷新酒馆网页。单独刷新网页不会自动把 GitHub 的修改拉到本地。
 
-**无需卸载重装，不要清理浏览器站点数据。** 旧信、星标、草稿保存在原来的 IndexedDB / LocalStorage 位置，v0.2.0 不迁移、不清空旧存档。
+**无需卸载重装，不要清理浏览器站点数据。** 旧信、星标、草稿保存在原来的 IndexedDB / LocalStorage 位置，v0.2.1 不迁移、不清空旧存档。
+
+## v0.2.1 修复内容
+
+- **手机入口**：保留悬浮信箱按钮，将其在触屏／小屏幕移动到屏幕右侧较高位置，避开手机底部浏览器栏与酒馆输入区；同时尝试添加到酒馆的**聊天扩展菜单**及**扩展设置面板**。即使悬浮按钮不可见，也可以通过原生菜单打开同一个信箱。弹窗层级也已提升。
+- **API 选项提示**：设置页在无独立连接时会解释原因——酒馆已有可用 API **不等于**已创建 Connection Profile。显示未保存预设、扩展禁用、无受支持预设等具体状态。
+- **刷新连接列表**：在酒馆「API 连接」中创建或修改 Connection Profile 后，无需刷新整个酒馆，可回信箱设置点击「↻ 刷新连接列表」。
+- 保留此前寄信、回信、收藏、全局信箱、搜索、草稿、JSON 备份与恢复及 PNG 导出的数据与行为，不进行数据库迁移。
+
+### 为什么 API 下拉框只有默认选项？
+
+信箱独立选 API 依赖酒馆内置 **Connection Profiles（连接配置）**。打开酒馆的 **API 连接**面板，先设置好 API 类型、模型及相关参数，再在 Connection Profiles 部分创建并保存一个带名字的连接配置。之后打开信箱 → ⚙ 设置 → **刷新连接列表**。已保存的、支持 Chat Completion 或 Text Completion 的配置才会出现在列表中。
+
+**仅仅在酒馆填写 API Key、选中模型、连接成功，并不等于已经保存 Connection Profile。** 如果不需要专用连接，保持「跟随酒馆当前 API」即可。信箱不会为你自动新建配置，也不会修改主聊天 API。若你有已保存配置却仍看不到，先确认 Connection Profiles 扩展已启用，并检查信箱给出的错误提示。
 
 ## v0.2.0 主要功能
 
@@ -71,18 +84,23 @@ src/export.js       无依赖 Canvas PNG 信纸导出
 
 图片排版沿袭 [拾句 Shiju](https://github.com/willwefind/shiju) 的设计方向，但为了轻量未引入其完整字体和素材资源。
 
-## v0.2.0 测试清单
+## v0.2.1 测试清单
 
-1. 先前已收藏的小陆、小谢信件应同时出现在「星标收藏」，不因选择不同收件人而变化。
-2. 从星标点开某封信、返回列表，仍显示跨角色收藏；取消收藏后立即从该列表消失。
-3. 顶部搜索「小陆」、主题词、原信文字或回信中的关键词，结果正确；切换到「角色信箱」后只搜索对应角色。
-4. 切换收件人不会自动改变「全部信件」／「星标收藏」视图，也不会把原来的草稿转移给别人。
-5. 切换 ☀ / ☾，关闭信箱再打开、刷新网页后，夜间/日间偏好仍保持。
-6. 设置里默认 API 仍能生成回信；选择 Connection Manager 预设后由选中的模型响应，同时主聊天 API 不变化。
-7. JSON 备份/恢复与 PNG 导出正常，旧信和草稿保持不变。
+1. **手机端**：先找信箱悬浮入口；如果被酒馆布局遮住，尝试在聊天输入区的扩展菜单或顶部扩展设置面板找到「✉ 打开世界某处的来信」。检查信箱可正常弹出、关闭、滚动和搜索。
+2. **API 设置**：未保存连接配置时，确认能看到明确提示；在酒馆 API 连接面板创建 Connection Profile，再点「刷新连接列表」，确认新配置出现。
+3. 先前已收藏的小陆、小谢信件应同时出现在「星标收藏」，不因选择不同收件人而变化。
+4. 从星标点开某封信、返回列表，仍显示跨角色收藏；取消收藏后立即从该列表消失。
+5. 顶部搜索「小陆」、主题词、原信文字或回信中的关键词，结果正确；切换到「角色信箱」后只搜索对应角色。
+6. 切换收件人不会自动改变「全部信件」／「星标收藏」视图，也不会把原来的草稿转移给别人。
+7. 切换 ☀ / ☾，关闭信箱再打开、刷新网页后，夜间/日间偏好仍保持。
+8. 设置里默认 API 仍能生成回信；选择 Connection Manager 预设后由选中的模型响应，同时主聊天 API 不变化。
+9. JSON 备份/恢复与 PNG 导出正常，旧信和草稿保持不变。
 
 发现问题可在 [Issues](https://github.com/willwefind/SillyTavern-Somewhere-a-Letter/issues) 中反馈。
 
 ---
 
 **English** — Somewhere, a Letter is a lightweight, one-off letterbox extension for SillyTavern. v0.2.0 introduces a Gmail-inspired inbox, global cross-character starred collection, local full-text search, optional Connection Manager profile selection, theme switching, and a dedicated settings page for JSON backup/restore. It still has no long-term AI memory, relationship states or external runtime dependencies.
+
+
+**v0.2.1** — Mobile access improvements and explicit Connection Profile setup/refresh guidance; no data migration.
