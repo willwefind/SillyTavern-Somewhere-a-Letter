@@ -47,41 +47,49 @@ function textTokens(line) {
     return line.match(/[A-Za-z0-9][A-Za-z0-9\-_.@/+']*|\s+|[\s\S]/gu) || [];
 }
 function wrapLine(ctx, text, width) {
+    // Adapted from Shiju's wrap(): opening punctuation must not end a line,
+    // and closing punctuation must not begin the next line.
     const result = [];
     let current = '';
     for (let token of textTokens(text)) {
-        if (ctx.measureText(current + token).width <= width) {
-            current += token;
-            continue;
-        }
-        if (current) {
-            // Opening punctuation should not dangle at the right edge.
-            for (let n = 0; n < 3 && current && NO_END.includes(current.at(-1)); n++) {
+        if (current && ctx.measureText(current + token).width > width) {
+            while (current && NO_END.includes(current.at(-1))) {
                 token = current.at(-1) + token;
                 current = current.slice(0, -1);
             }
-            // Keep closing punctuation off the left edge where possible.
-            if (NO_START.includes(token[0]) && result.length === 0 &&
-                ctx.measureText(current + token).width <= width * 1.08) {
-                current += token;
-                continue;
-            }
-            if (current.trim()) result.push(current.trimEnd());
+            if (current) result.push(current.trimEnd());
             current = '';
         }
-        if (/^\s+$/u.test(token)) continue;
-        // Overlong Latin words are split only when unavoidable.
-        while (ctx.measureText(token).width > width) {
-            let part = '';
-            for (const ch of Array.from(token)) {
-                if (part && ctx.measureText(part + ch).width > width) break;
-                part += ch;
+        if (!current && NO_START.includes(token[0]) && result.length) {
+            const last = result.length - 1;
+            const prev = result[last];
+            if (ctx.measureText(prev + token).width <= width) {
+                result[last] = prev + token;
+                continue;
             }
-            if (!part) break;
-            result.push(part);
-            token = token.slice(part.length);
+            if (prev.length > 1) {
+                // Pull the previous glyph to the new line; never strand a
+                // punctuation mark as the first character of a line.
+                const moved = prev.at(-1);
+                result[last] = prev.slice(0, -1);
+                current = moved;
+            }
         }
-        current = token;
+        if (!current && /^\s+$/u.test(token)) continue;
+        // Split a word only if the whole word itself exceeds page width.
+        if (!current && ctx.measureText(token).width > width) {
+            while (ctx.measureText(token).width > width) {
+                let piece = '';
+                for (const glyph of Array.from(token)) {
+                    if (piece && ctx.measureText(piece + glyph).width > width) break;
+                    piece += glyph;
+                }
+                if (!piece) break;
+                result.push(piece);
+                token = token.slice(piece.length);
+            }
+        }
+        current += token;
     }
     result.push(current.trimEnd());
     return result;
