@@ -516,8 +516,10 @@ async function shareReplyFiles(all = false) {
 function openOriginalImage() {
     const url = state.exportUrls[state.exportPage];
     if (!url) return;
-    const opened = window.open(url, '_blank', 'noopener');
-    if (!opened) el('preview-hint').textContent = '浏览器可能拦截了新标签页；请长按下方预览图片尝试保存。';
+    // Keep this inside the explicit click handler so Safari allows the new tab.
+    const opened = window.open(url, '_blank');
+    if (opened) opened.opener = null;
+    else el('preview-hint').textContent = '浏览器可能拦截了新标签页；请长按下方预览图片尝试保存。';
 }
 async function saveImage() {
     if (!state.current || !el('image-preview').hidden) return;
