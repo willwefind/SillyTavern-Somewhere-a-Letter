@@ -726,3 +726,260 @@
     #sal-root .sal-preview-pagination,
     #sal-root .sal-preview-actions { gap: 5px; }
 }
+
+
+/* v0.3.0 Letter Studio. A lightweight, responsive pre-layout workspace.
+   No font files or external UI frameworks are bundled. */
+#sal-root .sal-studio {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    color: var(--sal-ink);
+    background: var(--sal-paper);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+#sal-root .sal-studio-header {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 17px;
+    gap: 12px;
+    border-bottom: 1px solid var(--sal-line);
+}
+#sal-root .sal-studio-header div { display: grid; gap: 2px; }
+#sal-root .sal-studio-header small {
+    font: 10px Georgia,serif;
+    color: var(--sal-muted);
+    letter-spacing: .15em;
+}
+#sal-root .sal-studio-header strong { font-size: 17px; letter-spacing: .05em; }
+#sal-root .sal-studio button {
+    border: 1px solid var(--sal-line);
+    color: var(--sal-ink);
+    background: var(--sal-sidebar);
+    padding: 8px 11px;
+    border-radius: 7px;
+    font-size: 12px;
+    min-height: 35px;
+}
+#sal-root .sal-studio button:hover:not(:disabled) { background: var(--sal-hover); }
+#sal-root .sal-studio button:disabled { opacity: .45; }
+#sal-root .sal-studio-content {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(225px, 280px) minmax(0, 1fr);
+}
+#sal-root .sal-studio-controls {
+    min-height: 0;
+    min-width: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px;
+    background: var(--sal-sidebar);
+    border-right: 1px solid var(--sal-line);
+}
+#sal-root .sal-studio-controls summary {
+    color: var(--sal-ink);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    list-style-position: inside;
+}
+#sal-root .sal-studio-controls summary span {
+    display: none;
+    font-weight: 400;
+    color: var(--sal-muted);
+    font-size: 11px;
+}
+#sal-root .sal-studio-fields { display: grid; gap: 13px; }
+#sal-root .sal-studio-fields > label {
+    display: grid;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--sal-muted);
+    font-weight: 650;
+}
+#sal-root .sal-studio-fields select {
+    min-height: 40px;
+    font-size: 13px;
+    padding: 8px 10px;
+    width: 100%;
+}
+#sal-root .sal-studio-font-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: -5px;
+}
+#sal-root .sal-studio-font-actions button { flex: 1; }
+#sal-root .sal-studio-font-actions button:last-of-type { color: var(--sal-danger); }
+#sal-root .sal-studio-inks {
+    min-width: 0;
+    border: 1px solid var(--sal-line);
+    border-radius: 9px;
+    margin: 0;
+    padding: 10px;
+    display: grid;
+    gap: 11px;
+}
+#sal-root .sal-studio-inks legend {
+    font-size: 12px;
+    font-weight: 650;
+    padding: 0 5px;
+    color: var(--sal-muted);
+}
+#sal-root #sal-studio-ink-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+#sal-root #sal-studio-ink-presets button {
+    width: 27px;
+    height: 27px;
+    min-height: 27px;
+    border-radius: 50%;
+    padding: 0;
+    border: 2px solid transparent;
+    outline: 1px solid var(--sal-line);
+}
+#sal-root #sal-studio-ink-presets button[aria-pressed="true"] {
+    outline: 2px solid var(--sal-gold);
+    outline-offset: 2px;
+}
+#sal-root .sal-studio-inks label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    gap: 8px;
+}
+#sal-root .sal-studio-inks input[type="color"] {
+    width: 52px;
+    height: 35px;
+    min-height: 35px;
+    padding: 2px;
+    cursor: pointer;
+}
+#sal-root .sal-studio-tip {
+    margin: 0;
+    font-size: 11px;
+    color: var(--sal-muted);
+    line-height: 1.65;
+}
+#sal-root .sal-studio-stage {
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--sal-reply);
+}
+#sal-root .sal-studio-notice {
+    flex: none;
+    color: var(--sal-muted);
+    font-size: 12px;
+    margin: 0;
+    padding: 10px 15px;
+    line-height: 1.55;
+    background: var(--sal-paper);
+}
+#sal-root .sal-studio-notice.sal-error { color: var(--sal-danger); font-weight: 650; }
+#sal-root .sal-studio-image-wrap {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    align-items: flex-start;
+    justify-content: center;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    padding: 14px 10px;
+}
+#sal-root .sal-studio-image-wrap img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    display: block;
+    box-shadow: 0 4px 20px var(--sal-shadow);
+    /* Required to preserve the iOS long-press Save Image gesture. */
+    -webkit-touch-callout: default;
+    -webkit-user-select: auto;
+    user-select: auto;
+}
+#sal-root .sal-studio-toolbar {
+    flex: none;
+    display: grid;
+    gap: 10px;
+    border-top: 1px solid var(--sal-line);
+    background: var(--sal-paper);
+    padding: 10px 15px 13px;
+}
+#sal-root .sal-studio-pagination,
+#sal-root .sal-studio-exports {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+#sal-root .sal-studio-pagination span {
+    color: var(--sal-muted);
+    font-size: 12px;
+    min-width: 56px;
+    text-align: center;
+}
+#sal-root #sal-studio-save,
+#sal-root #sal-studio-share,
+#sal-root #sal-studio-share-all {
+    background: var(--sal-button);
+    color: var(--sal-button-text);
+}
+@media (max-width: 760px) {
+    #sal-root .sal-studio-header { padding: 7px 10px; }
+    #sal-root .sal-studio-header strong { font-size: 14px; }
+    #sal-root .sal-studio-header small { font-size: 9px; }
+    #sal-root .sal-studio-content {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+    #sal-root .sal-studio-controls {
+        padding: 6px 9px;
+        flex: none;
+        border-right: none;
+        border-bottom: 1px solid var(--sal-line);
+        max-height: 44%;
+        overflow-y: auto;
+    }
+    #sal-root .sal-studio-controls summary {
+        margin-bottom: 0;
+        font-size: 12px;
+    }
+    #sal-root .sal-studio-controls summary span { display: inline; }
+    #sal-root .sal-studio-controls[open] summary { margin-bottom: 8px; }
+    #sal-root .sal-studio-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        align-items: start;
+    }
+    #sal-root .sal-studio-fields label,
+    #sal-root .sal-studio-fields select {
+        font-size: 16px;
+    }
+    #sal-root .sal-studio-inks { grid-column: 1 / -1; }
+    #sal-root .sal-studio-font-actions { align-self: end; }
+    #sal-root .sal-studio-font-actions button { padding: 6px 7px; }
+    #sal-root .sal-studio-tip { grid-column: 1 / -1; font-size: 10px; }
+    #sal-root .sal-studio-stage { flex: 1; }
+    #sal-root .sal-studio-notice { padding: 5px 9px; font-size: 10px; }
+    #sal-root .sal-studio-image-wrap { padding: 7px; }
+    #sal-root .sal-studio-toolbar { padding: 6px 7px 8px; gap: 5px; }
+    #sal-root .sal-studio-pagination, #sal-root .sal-studio-exports { gap: 5px; }
+    #sal-root .sal-studio button { min-height: 31px; padding: 6px 7px; }
+}
