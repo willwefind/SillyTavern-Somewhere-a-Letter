@@ -421,3 +421,49 @@
     #sal-root .sal-brand h2 { font-size: 17px; }
     #sal-root .sal-header-actions { gap: 0; }
 }
+
+
+/* v0.2.1: fail-safe mobile entry points and settings feedback */
+#sal-root .sal-secondary {
+    background: var(--sal-sidebar);
+    border: 1px solid var(--sal-line);
+    color: var(--sal-ink);
+    border-radius: 7px;
+    padding: 9px 13px;
+    min-height: 38px;
+    justify-self: start;
+    font-size: 12px;
+}
+#sal-root .sal-secondary:hover { background: var(--sal-hover); }
+#sal-native-menu, #sal-native-settings {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 11px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--SmartThemeBodyColor, inherit);
+    font-size: 14px;
+}
+#sal-native-menu:hover, #sal-native-settings:hover { opacity: 1; }
+#sal-root .sal-overlay { z-index: 60000; }
+@media (max-width: 760px), (pointer: coarse) {
+    #sal-root .sal-float {
+        position: fixed !important;
+        /* Higher than the chat input and browser's bottom navigation. */
+        top: calc(env(safe-area-inset-top, 0px) + 28dvh) !important;
+        bottom: auto !important;
+        right: max(0px, env(safe-area-inset-right, 0px)) !important;
+        left: auto !important;
+        border-radius: 14px 0 0 14px;
+        padding: 11px 11px;
+        z-index: 20000;
+        box-shadow: 0 3px 20px #0005;
+    }
+    #sal-root .sal-overlay {
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+}
