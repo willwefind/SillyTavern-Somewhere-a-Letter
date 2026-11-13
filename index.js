@@ -3,7 +3,9 @@ import { saveLetter, listLetters, deleteLetter } from './src/storage.js';
 import { exportAsPng } from './src/export.js';
 
 const PREFIX = 'sal';
-let state = { selected: '', items: [], current: null, busy: false, request: 0 };
+const RECENTS_KEY = 'somewhere-a-letter:recent-recipients:v1';
+const MAX_RESULTS = 40;
+let state = { selected: '', people: [], items: [], current: null, busy: false, request: 0, activeIndex: -1, visiblePeople: [] };
 
 function el(id) { return document.getElementById(PREFIX + '-' + id); }
 function context() {
@@ -19,13 +21,15 @@ function mode(name) {
     el('reading').hidden = name !== 'reading';
 }
 function selectedName() {
-    return el('recipient').selectedOptions[0]?.textContent || '角色';
+    return state.people.find(person => person.id === state.selected)?.name || '角色';
 }
 function setBusy(value) {
     state.busy = value;
     el('send').disabled = value;
     el('send').textContent = value ? '正在等待回信…' : '寄出这封信';
-    el('recipient').disabled = value;
+    el('recipient-search').disabled = value;
+    el('recipient-results').hidden = true;
+    el('recipient-search').setAttribute('aria-expanded', 'false');
     el('new').disabled = value;
 }
 function show() {
@@ -40,30 +44,151 @@ function hide() {
     el('open').setAttribute('aria-expanded', 'false');
     el('open').focus();
 }
-function fillRecipients() {
-    const current = state.selected;
-    const list = recipients(context());
-    const select = el('recipient');
-    select.replaceChildren();
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = list.length ? '选择收件人…' : '还没有可用角色';
-    select.append(placeholder);
-    for (const item of list) {
-        const option = document.createElement('option');
-        option.value = item.id;
-        option.textContent = item.name;
-        select.append(option);
+function getRecents() {
+    try {
+        const ids = JSON.parse(localStorage.getItem(RECENTS_KEY) || '[]');
+        return Array.isArray(ids) ? ids.filter(id => typeof id === 'string').slice(0, 6) : [];
+    } catch {
+        return [];
     }
-    state.selected = list.some(r => r.id === current) ? current : (list[0]?.id || '');
-    select.value = state.selected;
+}
+function rememberRecipient(id) {
+    try {
+        const ids = [id, ...getRecents().filter(item => item !== id)].slice(0, 6);
+        localStorage.setItem(RECENTS_KEY, JSON.stringify(ids));
+    } catch {
+        // Selection still works when storage is blocked.
+    }
+}
+function renderCurrentRecipient() {
+    el('recipient-current').textContent = state.selected
+        ? '当前收件人：' + selectedName()
+        : '尚未选择收件人';
+}
+function fillRecipients() {
+    state.people = recipients(context());
+    if (!state.people.some(person => person.id === state.selected)) state.selected = '';
+    renderCurrentRecipient();
+    if (!el('recipient-results').hidden) renderRecipients();
+}
+function closeRecipients() {
+    el('recipient-results').hidden = true;
+    el('recipient-search').setAttribute('aria-expanded', 'false');
+    el('recipient-search').removeAttribute('aria-activedescendant');
+    state.activeIndex = -1;
+}
+function normalized(text) {
+    return String(text || '').normalize('NFKC').toLocaleLowerCase();
+}
+function renderRecipients() {
+    const query = normalized(el('recipient-search').value.trim());
+    const recentIds = getRecents();
+    const recent = recentIds.map(id => state.people.find(p => p.id === id)).filter(Boolean);
+    const ordered = query
+        ? state.people.filter(person => normalized(person.name).includes(query))
+        : [...recent, ...state.people.filter(person => !recentIds.includes(person.id))];
+    const result = el('recipient-results');
+    result.replaceChildren();
+    state.visiblePeople = ordered.slice(0, MAX_RESULTS);
+    state.activeIndex = -1;
+    el('recipient-search').removeAttribute('aria-activedescendant');
+    const caption = document.createElement('div');
+    caption.className = 'sal-result-caption';
+    caption.textContent = query
+        ? '搜索结果 · ' + ordered.length + ' 位角色'
+        : (recent.length ? '最近选择优先 · 共 ' + state.people.length + ' 位角色' : '全部角色 · ' + state.people.length + ' 位');
+    result.append(caption);
+    if (!ordered.length) {
+        const empty = document.createElement('div');
+        empty.className = 'sal-result-empty';
+        empty.textContent = query ? '找不到匹配的角色，请尝试角色卡中的名字。' : '酒馆中还没有角色卡。';
+        result.append(empty);
+    }
+    for (const [i, person] of state.visiblePeople.entries()) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'sal-result';
+        button.id = 'sal-result-' + i;
+        button.setAttribute('role', 'option');
+        button.setAttribute('aria-selected', String(person.id === state.selected));
+        button.dataset.index = String(i);
+        const name = document.createElement('span');
+        name.textContent = person.name;
+        button.append(name);
+        if (!query && recentIds.includes(person.id)) {
+            const small = document.createElement('small');
+            small.textContent = '最近';
+            button.append(small);
+        }
+        button.addEventListener('click', () => selectRecipient(person.id));
+        result.append(button);
+    }
+    if (ordered.length > MAX_RESULTS) {
+        const hint = document.createElement('div');
+        hint.className = 'sal-result-caption';
+        hint.textContent = '还有更多角色，请输入名字缩小范围。';
+        result.append(hint);
+    }
+    result.hidden = false;
+    el('recipient-search').setAttribute('aria-expanded', 'true');
+}
+function focusResult(index) {
+    state.activeIndex = index;
+    const options = el('recipient-results').querySelectorAll('[role="option"]');
+    options.forEach((item, i) => item.classList.toggle('sal-active', i === index));
+    const active = options[index];
+    if (active) {
+        active.scrollIntoView({ block: 'nearest' });
+        el('recipient-search').setAttribute('aria-activedescendant', active.id);
+    } else el('recipient-search').removeAttribute('aria-activedescendant');
+}
+function selectRecipient(id) {
+    if (state.busy) return;
+    const person = state.people.find(item => item.id === id);
+    if (!person) return;
+    const changed = state.selected !== id;
+    state.selected = id;
+    rememberRecipient(id);
+    el('recipient-search').value = '';
+    closeRecipients();
+    renderCurrentRecipient();
+    if (changed) {
+        compose();
+        void refreshList();
+    }
+}
+function onSearchKeydown(event) {
+    if (event.key === 'Escape') {
+        if (!el('recipient-results').hidden) {
+            event.stopPropagation();
+            closeRecipients();
+        }
+        return;
+    }
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp' && event.key !== 'Enter') return;
+    if (el('recipient-results').hidden) renderRecipients();
+    const count = state.visiblePeople.length;
+    if (!count) return;
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        const person = state.visiblePeople[state.activeIndex >= 0 ? state.activeIndex : 0];
+        if (person) selectRecipient(person.id);
+        return;
+    }
+    event.preventDefault();
+    const next = event.key === 'ArrowDown'
+        ? (state.activeIndex + 1) % count
+        : (state.activeIndex + count - 1) % count;
+    focusResult(next);
 }
 async function refreshList() {
     const thisRequest = ++state.request;
     const list = el('archive');
     list.replaceChildren();
     if (!state.selected) {
-        status('请先在酒馆中创建或导入角色卡。', true);
+        state.items = [];
+        el('count').textContent = '0 封已存信件';
+        status(state.people.length ? '搜索并选择一位收件人。' : '请先在酒馆中创建或导入角色卡。', !state.people.length);
         return;
     }
     try {
@@ -190,8 +315,12 @@ function buildUi() {
             '<header class="sal-header"><div><small>SOMEWHERE, A LETTER</small><h2>世界某处的来信</h2></div><button id="sal-close" type="button" aria-label="关闭信箱">×</button></header>',
             '<div class="sal-content">',
               '<aside class="sal-sidebar">',
-                '<label for="sal-recipient">收件人 / RECIPIENT</label>',
-                '<select id="sal-recipient"></select>',
+                '<label for="sal-recipient-search">收件人 / RECIPIENT</label>',
+                '<div id="sal-picker" class="sal-picker">',
+                  '<input id="sal-recipient-search" type="search" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="sal-recipient-results" autocomplete="off" placeholder="⌕ 搜索角色名称…" />',
+                  '<div id="sal-recipient-results" class="sal-results" role="listbox" aria-label="收件人搜索结果" hidden></div>',
+                '</div>',
+                '<div id="sal-recipient-current" class="sal-current" aria-live="polite">尚未选择收件人</div>',
                 '<button id="sal-new" class="sal-new" type="button">＋ 写一封新信</button>',
                 '<div class="sal-sideheading"><span>往来信件</span><small id="sal-count">0 封已存信件</small></div>',
                 '<div id="sal-archive" class="sal-archive" aria-label="存档信件"></div>',
@@ -228,15 +357,19 @@ function buildUi() {
     el('close').addEventListener('click', hide);
     el('overlay').addEventListener('click', event => { if (event.target === el('overlay')) hide(); });
     document.addEventListener('keydown', event => {
-        if (event.key === 'Escape' && !el('overlay').hidden) hide();
+        if (event.key === 'Escape' && !el('overlay').hidden) {
+            if (!el('recipient-results').hidden) closeRecipients();
+            else hide();
+        }
         if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !el('compose').hidden && !el('overlay').hidden) {
             el('compose').requestSubmit();
         }
     });
-    el('recipient').addEventListener('change', () => {
-        state.selected = el('recipient').value;
-        compose();
-        void refreshList();
+    el('recipient-search').addEventListener('focus', renderRecipients);
+    el('recipient-search').addEventListener('input', renderRecipients);
+    el('recipient-search').addEventListener('keydown', onSearchKeydown);
+    document.addEventListener('pointerdown', event => {
+        if (!el('picker').contains(event.target)) closeRecipients();
     });
     el('new').addEventListener('click', compose);
     el('compose').addEventListener('submit', send);
