@@ -49,18 +49,31 @@
 }
 #sal-root .sal-float {
     position: fixed;
-    z-index: 10010;
-    right: 20px;
-    bottom: 90px;
+    z-index: 20000;
+    /* Explicit left/top are assigned by src/launcher.js (mobile-safe). */
+    left: 0;
+    top: 0;
+    right: auto;
+    bottom: auto;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
     border: 1px solid var(--sal-line);
-    border-radius: 100px;
+    border-radius: 14px;
     background: var(--sal-sidebar);
     color: var(--sal-ink);
     box-shadow: 0 6px 18px var(--sal-shadow);
-    padding: 10px 17px;
-    font-weight: 600;
-    letter-spacing: .04em;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
+#sal-root .sal-float svg { display: block; width: 24px; height: 24px; pointer-events: none; }
+#sal-root .sal-float.sal-dragging { cursor: grabbing; opacity: .94; }
 #sal-root .sal-float:hover { background: var(--sal-hover); }
 #sal-root .sal-overlay {
     position: fixed;
@@ -413,7 +426,6 @@
     #sal-root .sal-mail-subject { font-size: 13px; }
     #sal-root .sal-letter { padding: 14px; }
     #sal-root .sal-footer { padding: 7px 10px; font-size: 10px; }
-    #sal-root .sal-float { right: 13px; bottom: 83px; padding: 8px 12px; }
 }
 @media (max-width: 360px) {
     #sal-root .sal-nav button { padding: 6px 3px; font-size: 10px; }
@@ -450,18 +462,8 @@
 #sal-native-menu:hover, #sal-native-settings:hover { opacity: 1; }
 #sal-root .sal-overlay { z-index: 60000; }
 @media (max-width: 760px), (pointer: coarse) {
-    #sal-root .sal-float {
-        position: fixed !important;
-        /* Higher than the chat input and browser's bottom navigation. */
-        top: calc(env(safe-area-inset-top, 0px) + 28dvh) !important;
-        bottom: auto !important;
-        right: max(0px, env(safe-area-inset-right, 0px)) !important;
-        left: auto !important;
-        border-radius: 14px 0 0 14px;
-        padding: 11px 11px;
-        z-index: 20000;
-        box-shadow: 0 3px 20px #0005;
-    }
+    /* Keep only the modal's safe-area padding. The launcher coordinates
+       belong to the JS drag handler, not viewport right/bottom anchors. */
     #sal-root .sal-overlay {
         padding-top: env(safe-area-inset-top, 0px);
         padding-bottom: env(safe-area-inset-bottom, 0px);
