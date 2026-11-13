@@ -1,107 +1,423 @@
-#sal-root, #sal-root * { box-sizing: border-box; }
-#sal-root { --sal-paper: #faf7ef; --sal-ink: #292a26; --sal-muted: #81786b; --sal-line: #ddd5c6; --sal-accent: #6d5841; font-family: "Noto Sans CJK SC", "Microsoft YaHei", system-ui, sans-serif; }
-#sal-root [hidden] { display: none !important; }
-#sal-root button, #sal-root input, #sal-root textarea, #sal-root select { font: inherit; }
-#sal-root button { cursor: pointer; }
-#sal-root button:focus-visible, #sal-root input:focus-visible, #sal-root textarea:focus-visible, #sal-root select:focus-visible { outline: 2px solid #ae8f67; outline-offset: 2px; }
-#sal-root .sal-float { position: fixed; right: 20px; bottom: 90px; z-index: 10010; border: 1px solid #d4cbb8; border-radius: 100px; background: #f4eddf; color: #514537; box-shadow: 0 5px 20px #0004; padding: 9px 15px; font-size: 15px; font-weight: 600; letter-spacing: .04em; }
-#sal-root .sal-float:hover { background: #e9ddc9; }
-#sal-root .sal-overlay { position: fixed; inset: 0; z-index: 10020; display: flex; justify-content: center; align-items: center; padding: 20px; background: #161512b8; }
-#sal-root .sal-panel { width: min(1060px, 100%); height: min(820px, 92dvh); max-height: 92vh; min-height: 370px; background: var(--sal-paper); color: var(--sal-ink); border: 1px solid #cfc5b3; border-radius: 16px; box-shadow: 0 25px 70px #0006; display: flex; flex-direction: column; overflow: hidden; }
-#sal-root .sal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 26px 16px; border-bottom: 1px solid var(--sal-line); }
-#sal-root .sal-header small { display: block; color: var(--sal-muted); font-family: Georgia, serif; font-size: 11px; letter-spacing: .17em; }
-#sal-root .sal-header h2 { margin: 5px 0 0; font-size: 24px; line-height: 1.4; letter-spacing: .07em; }
-#sal-root #sal-close { color: var(--sal-ink); border: 0; background: transparent; font-size: 33px; line-height: 1; padding: 4px 9px; }
-#sal-root .sal-content { flex: 1; min-height: 0; display: grid; grid-template-columns: 282px minmax(0,1fr); }
-#sal-root .sal-sidebar { border-right: 1px solid var(--sal-line); background: #f4efe5; display: flex; flex-direction: column; padding: 22px 17px; min-height: 0; gap: 10px; }
-#sal-root .sal-sidebar > label, #sal-root .sal-main label { font-size: 12px; color: #655b4f; letter-spacing: .05em; font-weight: 600; }
-#sal-root select, #sal-root input, #sal-root textarea { width: 100%; border: 1px solid #cfc4b2; color: #34312d; background: #fffdf8; border-radius: 7px; padding: 10px 11px; min-height: 41px; }
-
-/* v0.1.1 searchable recipient picker */
-#sal-root .sal-picker { position: relative; width: 100%; z-index: 7; }
-#sal-root .sal-picker input[type="search"] { padding-right: 10px; }
-#sal-root .sal-current { font-size: 12px; color: #655743; background: #e9dfcf; border: 1px solid #d7cab8; border-radius: 7px; padding: 9px 10px; line-height: 1.4; overflow-wrap: anywhere; }
-#sal-root .sal-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 9; max-height: min(300px, 45vh); overflow-y: auto; overscroll-behavior: contain; background: #fffdf8; border: 1px solid #bdb09c; border-radius: 8px; box-shadow: 0 10px 26px #30241635; padding: 5px; }
-#sal-root .sal-result-caption { padding: 7px 9px; font-size: 11px; line-height: 1.5; color: #827563; }
-#sal-root .sal-result-empty { font-size: 12px; color: #827563; padding: 15px 10px; }
-#sal-root .sal-result { width: 100%; border: 0; border-radius: 5px; background: transparent; color: #3f372c; font-size: 13px; padding: 9px 8px; display: flex; align-items: center; justify-content: space-between; text-align: left; gap: 10px; min-height: 39px; }
-#sal-root .sal-result span { overflow-wrap: anywhere; }
-#sal-root .sal-result small { font-size: 10px; flex: none; color: #8a7a63; }
-#sal-root .sal-result[aria-selected="true"] { font-weight: 700; background: #f2eadc; }
-#sal-root .sal-result:hover, #sal-root .sal-result.sal-active { background: #e8d9c5; }
-#sal-root .sal-result:focus-visible { outline-offset: -2px; }
-#sal-root textarea { resize: vertical; min-height: 225px; line-height: 1.85; font-size: 15px; }
-#sal-root .sal-new { display: block; width: 100%; padding: 10px; color: #554a3e; background: #e8dfd0; border: 1px solid #cfc4b2; border-radius: 8px; font-weight: 700; }
-#sal-root .sal-new:hover { background: #e0d3be; }
-#sal-root .sal-sideheading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px; border-bottom: 1px solid var(--sal-line); margin-top: 14px; padding-bottom: 8px; }
-#sal-root .sal-sideheading span { font-size: 14px; font-weight: 700; }
-#sal-root .sal-sideheading small { font-size: 11px; color: var(--sal-muted); }
-#sal-root .sal-archive { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
-#sal-root .sal-empty { padding: 16px 4px; color: var(--sal-muted); font-size: 12px; }
-#sal-root .sal-item { width: 100%; text-align: left; display: flex; flex-direction: column; gap: 5px; padding: 12px 11px; border: 1px solid transparent; background: transparent; border-radius: 8px; color: var(--sal-ink); }
-#sal-root .sal-item:hover, #sal-root .sal-item:focus-visible { background: #eae0d0; border-color: #d3c7b3; }
-#sal-root .sal-item strong { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-#sal-root .sal-item small { font-size: 11px; color: var(--sal-muted); }
-#sal-root .sal-main { overflow-y: auto; min-height: 0; padding: 29px min(5vw, 49px); }
-#sal-root #sal-compose { display: flex; flex-direction: column; gap: 11px; }
-#sal-root .sal-eyebrow { font-family: Georgia, serif; letter-spacing: .14em; color: #86755e; font-size: 11px; margin: 0 0 4px; }
-#sal-root .sal-main h3 { font-size: 24px; margin: 0 0 8px; font-weight: 650; }
-#sal-root .sal-main h4 { font-size: 14px; color: #6a5d4c; margin: 24px 0 8px; }
-#sal-root .sal-primary { align-self: flex-end; background: #69533b; color: #fff8ef; padding: 11px 22px; border: 1px solid #69533b; border-radius: 8px; font-weight: 600; }
-#sal-root .sal-primary:disabled { opacity: .6; cursor: wait; }
-#sal-root .sal-primary:not(:disabled):hover { background: #543d29; }
-#sal-root .sal-letter { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.85; font-family: "Songti SC", "Noto Serif CJK SC", serif; font-size: 16px; color: #342e28; padding: 17px 20px; border: 1px solid #e2d9c9; background: #fffdf9; border-radius: 8px; }
-#sal-root .sal-response .sal-letter { background: #f6f0e5; }
-#sal-root .sal-meta { font-size: 12px; color: var(--sal-muted); }
-#sal-root .sal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 8px; }
-#sal-root .sal-actions button { background: #e9e0d1; color: #483e34; border: 1px solid #d2c7b5; border-radius: 7px; padding: 9px 15px; }
-#sal-root .sal-actions button:hover { background: #ded0bb; }
-#sal-root .sal-actions .sal-danger { margin-left: auto; color: #964e48; }
-#sal-root .sal-status { font-size: 12px; min-height: 19px; line-height: 1.7; color: #746a59; margin: 15px 0 0; }
-#sal-root .sal-status.sal-error { color: #b04636; font-weight: 600; }
-#sal-root .sal-footer { border-top: 1px solid var(--sal-line); padding: 11px 20px; text-align: center; color: #8b806e; font-size: 11px; }
-@media (max-width: 640px) {
-  #sal-root .sal-float { bottom: 82px; right: 12px; padding: 8px 12px; }
-  #sal-root .sal-overlay { padding: 0; align-items: stretch; }
-  #sal-root .sal-panel { height: 100dvh; max-height: 100dvh; width: 100%; min-height: 0; border: 0; border-radius: 0; }
-  #sal-root .sal-header { padding: 13px 17px 11px; }
-  #sal-root .sal-header h2 { font-size: 21px; }
-  #sal-root .sal-content { display: flex; flex-direction: column; }
-  #sal-root .sal-sidebar { flex: none; padding: 10px 14px; border-right: none; border-bottom: 1px solid var(--sal-line); gap: 7px; }
-  #sal-root .sal-sidebar .sal-sideheading { margin-top: 3px; }
-  #sal-root .sal-archive { flex: none; display: flex; flex-direction: row; max-height: 87px; overflow-x: auto; overflow-y: hidden; }
-  #sal-root .sal-item { flex: 0 0 155px; }
-  #sal-root .sal-empty { padding: 6px; }
-  #sal-root .sal-main { flex: 1; padding: 16px 17px 25px; }
-  #sal-root .sal-footer { padding: 8px 10px; font-size: 10px; }
-  #sal-root .sal-main h3 { font-size: 21px; }
-  #sal-root textarea { min-height: 205px; }
+/* Somewhere, a Letter v0.2.0 — no external UI or font dependencies */
+#sal-root {
+    --sal-paper: #faf7f0;
+    --sal-sidebar: #f1ecdf;
+    --sal-field: #fffcf7;
+    --sal-ink: #302d28;
+    --sal-muted: #867d70;
+    --sal-line: #dfd6c8;
+    --sal-hover: #e8dece;
+    --sal-selected: #dfd1bd;
+    --sal-button: #755c42;
+    --sal-button-text: #fff9ed;
+    --sal-quote: #fffdf9;
+    --sal-reply: #f2ecdf;
+    --sal-gold: #af813d;
+    --sal-danger: #a55448;
+    --sal-shadow: #241c1340;
+    font-family: "Noto Sans CJK SC", "Microsoft YaHei", system-ui, sans-serif;
 }
-
-
-/* v0.1.2: favorites, backups and autosaved letter drafts */
-#sal-root .sal-filters { display: flex; align-items: center; gap: 5px; }
-#sal-root .sal-filters button { flex: 1; padding: 7px 8px; min-height: 33px; background: transparent; border: 1px solid #d7ccbb; color: #756858; border-radius: 6px; font-size: 12px; }
-#sal-root .sal-filters button[aria-pressed="true"] { background: #e4d6c2; border-color: #b9a992; color: #473a29; font-weight: 700; }
-#sal-root .sal-filters button:hover { background: #eee3d3; }
-#sal-root .sal-item-row { display: flex; align-items: center; gap: 1px; min-width: 0; border-radius: 8px; }
-#sal-root .sal-item-row:hover { background: #eae0d0; }
-#sal-root .sal-item-row .sal-item { flex: 1; min-width: 0; }
-#sal-root .sal-star { flex: none; border: none; border-radius: 6px; background: transparent; color: #a49b8d; min-width: 33px; height: 36px; font-size: 23px; padding: 0 4px; line-height: 1; }
-#sal-root .sal-star[aria-pressed="true"] { color: #ad7d38; }
-#sal-root .sal-star:hover { color: #a8762f; background: #e9dcc9; }
-#sal-root .sal-actions #sal-detail-star[aria-pressed="true"] { color: #8d5f21; background: #f0ddae; border-color: #ccb27a; }
-#sal-root .sal-draft-hint { font-size: 11px; line-height: 1.5; color: #8a7962; margin: -3px 0 1px; }
-#sal-root .sal-backup { display: flex; gap: 5px; margin-top: 5px; border-top: 1px solid var(--sal-line); padding-top: 11px; }
-#sal-root .sal-backup button { flex: 1; min-width: 0; border: 1px solid #d8cbbb; border-radius: 6px; background: #f4eadb; color: #6a5844; font-size: 11px; padding: 8px 4px; }
-#sal-root .sal-backup button:hover { background: #e9dbc6; }
-#sal-root .sal-backup input[hidden] { display: none; }
-@media (max-width: 640px) {
-  #sal-root .sal-item-row { flex: 0 0 185px; min-width: 185px; }
-  #sal-root .sal-item-row .sal-item { flex: 1; }
-  #sal-root .sal-item-row .sal-star { min-width: 29px; }
-  #sal-root .sal-filters { justify-content: flex-start; }
-  #sal-root .sal-filters button { flex: none; min-width: 80px; }
-  #sal-root .sal-backup { padding-top: 7px; margin-top: 0; }
-  #sal-root .sal-backup button { padding: 6px; }
+#sal-root[data-theme="dark"] {
+    --sal-paper: #242520;
+    --sal-sidebar: #1d1e1b;
+    --sal-field: #2d2f29;
+    --sal-ink: #ece8dd;
+    --sal-muted: #a8a395;
+    --sal-line: #43453d;
+    --sal-hover: #35382f;
+    --sal-selected: #45483e;
+    --sal-button: #ba9a72;
+    --sal-button-text: #1d1e1b;
+    --sal-quote: #2d2f29;
+    --sal-reply: #30332d;
+    --sal-gold: #e0b66c;
+    --sal-danger: #e49b91;
+    --sal-shadow: #0007;
+}
+#sal-root, #sal-root * { box-sizing: border-box; }
+#sal-root [hidden] { display: none !important; }
+#sal-root button, #sal-root input, #sal-root textarea, #sal-root select {
+    font: inherit;
+    color: inherit;
+}
+#sal-root button { cursor: pointer; }
+#sal-root button:disabled { opacity: .55; cursor: not-allowed; }
+#sal-root button:focus-visible, #sal-root input:focus-visible,
+#sal-root textarea:focus-visible, #sal-root select:focus-visible {
+    outline: 2px solid var(--sal-gold);
+    outline-offset: 2px;
+}
+#sal-root .sal-float {
+    position: fixed;
+    z-index: 10010;
+    right: 20px;
+    bottom: 90px;
+    border: 1px solid var(--sal-line);
+    border-radius: 100px;
+    background: var(--sal-sidebar);
+    color: var(--sal-ink);
+    box-shadow: 0 6px 18px var(--sal-shadow);
+    padding: 10px 17px;
+    font-weight: 600;
+    letter-spacing: .04em;
+}
+#sal-root .sal-float:hover { background: var(--sal-hover); }
+#sal-root .sal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10020;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 17px;
+    background: #14130fbc;
+}
+#sal-root .sal-panel {
+    color: var(--sal-ink);
+    background: var(--sal-paper);
+    width: min(1120px, 100%);
+    height: min(850px, 93dvh);
+    max-height: 93vh;
+    min-height: 350px;
+    border: 1px solid var(--sal-line);
+    border-radius: 14px;
+    box-shadow: 0 28px 70px var(--sal-shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+#sal-root .sal-header {
+    display: flex;
+    align-items: center;
+    gap: 19px;
+    border-bottom: 1px solid var(--sal-line);
+    padding: 16px 23px;
+    min-height: 87px;
+}
+#sal-root .sal-brand { min-width: 220px; flex: 0 0 auto; }
+#sal-root .sal-brand small {
+    font: 11px Georgia, serif;
+    letter-spacing: .18em;
+    color: var(--sal-muted);
+}
+#sal-root .sal-brand h2 {
+    font-size: 22px;
+    letter-spacing: .045em;
+    margin: 5px 0 0;
+    line-height: 1.3;
+    font-weight: 650;
+}
+#sal-root .sal-top-search { flex: 1; min-width: 100px; }
+#sal-root input, #sal-root textarea, #sal-root select {
+    width: 100%;
+    background: var(--sal-field);
+    color: var(--sal-ink);
+    border: 1px solid var(--sal-line);
+    border-radius: 8px;
+    padding: 11px 12px;
+    min-height: 42px;
+}
+#sal-root input::placeholder, #sal-root textarea::placeholder { color: var(--sal-muted); opacity: .85; }
+#sal-root .sal-top-search input {
+    background: var(--sal-sidebar);
+    border-color: transparent;
+    border-radius: 100px;
+    padding: 12px 17px;
+}
+#sal-root .sal-top-search input:focus { border-color: var(--sal-gold); }
+#sal-root .sal-header-actions { display: flex; align-items: center; flex: none; gap: 3px; }
+#sal-root .sal-icon-btn {
+    border: none;
+    background: transparent;
+    color: var(--sal-ink);
+    font-size: 23px;
+    width: 36px;
+    height: 37px;
+    border-radius: 8px;
+    line-height: 1;
+}
+#sal-root .sal-icon-btn:hover, #sal-root .sal-icon-btn[aria-pressed="true"] { background: var(--sal-hover); }
+#sal-root .sal-content { flex: 1; min-height: 0; display: grid; grid-template-columns: 245px minmax(0, 1fr); }
+#sal-root .sal-sidebar {
+    border-right: 1px solid var(--sal-line);
+    background: var(--sal-sidebar);
+    padding: 20px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    min-height: 0;
+}
+#sal-root .sal-new {
+    border: 1px solid var(--sal-line);
+    border-radius: 11px;
+    background: var(--sal-selected);
+    color: var(--sal-ink);
+    text-align: left;
+    padding: 13px 17px;
+    min-height: 49px;
+    font-size: 14px;
+    font-weight: 700;
+}
+#sal-root .sal-new:hover { background: var(--sal-hover); }
+#sal-root .sal-nav { display: grid; gap: 5px; }
+#sal-root .sal-nav button {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--sal-ink);
+    width: 100%;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    text-align: left;
+    border-radius: 10px;
+}
+#sal-root .sal-nav button span { flex: 1; font-size: 13px; }
+#sal-root .sal-nav button small { color: var(--sal-muted); font-size: 11px; }
+#sal-root .sal-nav button:hover { background: var(--sal-hover); }
+#sal-root .sal-nav button[aria-current="page"] {
+    background: var(--sal-selected);
+    color: var(--sal-ink);
+    font-weight: 700;
+}
+#sal-root .sal-recipient-area {
+    margin-top: 9px;
+    border-top: 1px solid var(--sal-line);
+    padding-top: 19px;
+    display: grid;
+    gap: 10px;
+}
+#sal-root .sal-recipient-area label,
+#sal-root #sal-compose label,
+#sal-root .sal-setting-section label { font-size: 12px; color: var(--sal-muted); font-weight: 700; }
+#sal-root .sal-current {
+    font-size: 12px;
+    color: var(--sal-ink);
+    border: 1px solid var(--sal-line);
+    border-radius: 8px;
+    padding: 10px;
+    overflow-wrap: anywhere;
+    background: var(--sal-paper);
+}
+#sal-root .sal-picker { position: relative; z-index: 7; min-width: 0; }
+#sal-root .sal-picker input { min-height: 40px; font-size: 13px; }
+#sal-root .sal-results {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    border: 1px solid var(--sal-line);
+    border-radius: 8px;
+    background: var(--sal-field);
+    max-height: min(290px, 45dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    box-shadow: 0 10px 28px var(--sal-shadow);
+    padding: 5px;
+    z-index: 10;
+}
+#sal-root .sal-result-caption { font-size: 11px; color: var(--sal-muted); padding: 8px; }
+#sal-root .sal-result-empty { font-size: 12px; color: var(--sal-muted); padding: 15px 9px; }
+#sal-root .sal-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    width: 100%;
+    padding: 9px;
+    min-height: 38px;
+    font-size: 13px;
+    text-align: left;
+}
+#sal-root .sal-result:hover, #sal-root .sal-result.sal-active,
+#sal-root .sal-result[aria-selected="true"] { background: var(--sal-hover); }
+#sal-root .sal-result small { font-size: 10px; color: var(--sal-muted); }
+#sal-root .sal-sidebar-note {
+    color: var(--sal-muted);
+    font-size: 11px;
+    line-height: 1.65;
+    margin: auto 3px 0;
+}
+#sal-root .sal-main { min-width: 0; min-height: 0; overflow-y: auto; padding: 26px min(4vw, 45px) 22px; }
+#sal-root .sal-list-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid var(--sal-line);
+    padding-bottom: 14px;
+}
+#sal-root .sal-list-heading h3,
+#sal-root .sal-main h3 { font-size: 23px; font-weight: 650; margin: 0 0 8px; }
+#sal-root .sal-list-heading h3 { margin: 0; }
+#sal-root .sal-list-heading small { font-size: 12px; color: var(--sal-muted); }
+#sal-root .sal-archive { display: flex; flex-direction: column; }
+#sal-root .sal-empty { padding: 55px 20px; text-align: center; font-size: 13px; color: var(--sal-muted); }
+#sal-root .sal-mail-row {
+    display: flex;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--sal-line);
+    border-radius: 4px;
+    padding: 4px 2px;
+    gap: 4px;
+}
+#sal-root .sal-mail-row:hover { background: var(--sal-hover); }
+#sal-root .sal-star {
+    flex: none;
+    border: none;
+    background: transparent;
+    color: var(--sal-muted);
+    font-size: 24px;
+    border-radius: 6px;
+    min-width: 35px;
+    padding: 11px 4px;
+    line-height: 1;
+}
+#sal-root .sal-star[aria-pressed="true"] { color: var(--sal-gold); }
+#sal-root .sal-star:hover { background: var(--sal-selected); color: var(--sal-gold); }
+#sal-root .sal-mail-open {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    text-align: left;
+    padding: 9px 9px 11px 4px;
+}
+#sal-root .sal-mail-heading { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
+#sal-root .sal-mail-heading strong { font-size: 13px; font-weight: 700; }
+#sal-root .sal-mail-heading small { font-size: 11px; color: var(--sal-muted); flex: none; }
+#sal-root .sal-mail-subject {
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#sal-root .sal-mail-snippet {
+    font-size: 12px;
+    color: var(--sal-muted);
+    margin: 4px 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#sal-root #sal-compose { display: flex; flex-direction: column; gap: 11px; max-width: 740px; }
+#sal-root .sal-eyebrow {
+    margin: 0 0 4px;
+    color: var(--sal-muted);
+    font: 11px Georgia, serif;
+    letter-spacing: .14em;
+}
+#sal-root .sal-compose-to { font-size: 13px; color: var(--sal-muted); margin: 2px 0 7px; }
+#sal-root .sal-compose-to strong { color: var(--sal-ink); }
+#sal-root textarea {
+    resize: vertical;
+    min-height: 215px;
+    line-height: 1.85;
+    font-size: 15px;
+}
+#sal-root .sal-draft-hint { margin: 0; color: var(--sal-muted); font-size: 11px; }
+#sal-root .sal-primary {
+    align-self: flex-end;
+    background: var(--sal-button);
+    color: var(--sal-button-text);
+    border: 1px solid var(--sal-button);
+    border-radius: 8px;
+    padding: 11px 22px;
+    font-weight: 700;
+}
+#sal-root .sal-primary:hover { filter: brightness(.93); }
+#sal-root .sal-meta { font-size: 12px; color: var(--sal-muted); }
+#sal-root .sal-main h4 { margin: 25px 0 9px; font-size: 14px; }
+#sal-root .sal-letter {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.85;
+    padding: 21px 23px;
+    border: 1px solid var(--sal-line);
+    border-radius: 9px;
+    background: var(--sal-quote);
+    font: 16px/1.85 "Songti SC", "Noto Serif CJK SC", serif;
+}
+#sal-root .sal-response .sal-letter { background: var(--sal-reply); }
+#sal-root .sal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+#sal-root .sal-actions button, #sal-root .sal-backup-actions button {
+    border: 1px solid var(--sal-line);
+    background: var(--sal-sidebar);
+    color: var(--sal-ink);
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-size: 12px;
+}
+#sal-root .sal-actions button:hover, #sal-root .sal-backup-actions button:hover { background: var(--sal-hover); }
+#sal-root .sal-actions #sal-detail-star[aria-pressed="true"] { color: var(--sal-gold); }
+#sal-root .sal-actions .sal-danger { margin-left: auto; color: var(--sal-danger); }
+#sal-root #sal-settings-view { max-width: 710px; }
+#sal-root .sal-setting-section {
+    display: grid;
+    gap: 11px;
+    border-top: 1px solid var(--sal-line);
+    padding: 22px 0;
+}
+#sal-root .sal-setting-section h4 { margin: 0; }
+#sal-root .sal-setting-hint { color: var(--sal-muted); font-size: 12px; line-height: 1.7; margin: 0; }
+#sal-root .sal-backup-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+#sal-root .sal-status { min-height: 18px; margin: 18px 0 0; font-size: 12px; color: var(--sal-muted); line-height: 1.6; }
+#sal-root .sal-status.sal-error { color: var(--sal-danger); font-weight: 700; }
+#sal-root .sal-footer {
+    padding: 11px 15px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--sal-muted);
+    border-top: 1px solid var(--sal-line);
+}
+@media (max-width: 760px) {
+    #sal-root .sal-overlay { padding: 0; }
+    #sal-root .sal-panel { width: 100%; max-height: 100dvh; height: 100dvh; min-height: 0; border: none; border-radius: 0; }
+    #sal-root .sal-header { padding: 11px 14px; flex-wrap: wrap; gap: 8px; }
+    #sal-root .sal-brand { min-width: 0; flex: 1; }
+    #sal-root .sal-brand h2 { font-size: 19px; margin: 3px 0 0; }
+    #sal-root .sal-header-actions { order: 1; }
+    #sal-root .sal-top-search { order: 2; width: 100%; flex: 0 0 100%; }
+    #sal-root .sal-top-search input { min-height: 38px; padding: 8px 13px; }
+    #sal-root .sal-icon-btn { width: 31px; height: 33px; font-size: 21px; }
+    #sal-root .sal-content { display: flex; flex-direction: column; }
+    #sal-root .sal-sidebar {
+        flex: none;
+        gap: 7px;
+        padding: 10px 12px;
+        border-right: none;
+        border-bottom: 1px solid var(--sal-line);
+    }
+    #sal-root .sal-new { min-height: 38px; padding: 8px 12px; }
+    #sal-root .sal-nav { display: flex; gap: 4px; }
+    #sal-root .sal-nav button { flex: 1; min-width: 0; min-height: 36px; padding: 7px 7px; gap: 3px; font-size: 12px; justify-content: center; }
+    #sal-root .sal-nav button span { flex: none; white-space: nowrap; font-size: 12px; }
+    #sal-root .sal-nav button small { display: none; }
+    #sal-root .sal-recipient-area { margin: 0; padding-top: 7px; border: none; gap: 5px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+    #sal-root .sal-recipient-area label { grid-column: 1 / -1; font-size: 10px; }
+    #sal-root .sal-picker { min-width: 0; }
+    #sal-root .sal-picker input { min-height: 34px; padding: 6px 9px; }
+    #sal-root .sal-current { padding: 8px; font-size: 11px; min-height: 34px; }
+    #sal-root .sal-sidebar-note { display: none; }
+    #sal-root .sal-main { flex: 1; padding: 16px 15px 25px; }
+    #sal-root .sal-list-heading h3, #sal-root .sal-main h3 { font-size: 20px; }
+    #sal-root .sal-mail-heading strong { font-size: 12px; }
+    #sal-root .sal-mail-subject { font-size: 13px; }
+    #sal-root .sal-letter { padding: 14px; }
+    #sal-root .sal-footer { padding: 7px 10px; font-size: 10px; }
+    #sal-root .sal-float { right: 13px; bottom: 83px; padding: 8px 12px; }
+}
+@media (max-width: 360px) {
+    #sal-root .sal-nav button { padding: 6px 3px; font-size: 10px; }
+    #sal-root .sal-nav button span { font-size: 11px; }
+    #sal-root .sal-brand h2 { font-size: 17px; }
+    #sal-root .sal-header-actions { gap: 0; }
 }
