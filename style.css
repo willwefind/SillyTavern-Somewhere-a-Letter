@@ -1,0 +1,65 @@
+#sal-root, #sal-root * { box-sizing: border-box; }
+#sal-root { --sal-paper: #faf7ef; --sal-ink: #292a26; --sal-muted: #81786b; --sal-line: #ddd5c6; --sal-accent: #6d5841; font-family: "Noto Sans CJK SC", "Microsoft YaHei", system-ui, sans-serif; }
+#sal-root [hidden] { display: none !important; }
+#sal-root button, #sal-root input, #sal-root textarea, #sal-root select { font: inherit; }
+#sal-root button { cursor: pointer; }
+#sal-root button:focus-visible, #sal-root input:focus-visible, #sal-root textarea:focus-visible, #sal-root select:focus-visible { outline: 2px solid #ae8f67; outline-offset: 2px; }
+#sal-root .sal-float { position: fixed; right: 20px; bottom: 90px; z-index: 10010; border: 1px solid #d4cbb8; border-radius: 100px; background: #f4eddf; color: #514537; box-shadow: 0 5px 20px #0004; padding: 9px 15px; font-size: 15px; font-weight: 600; letter-spacing: .04em; }
+#sal-root .sal-float:hover { background: #e9ddc9; }
+#sal-root .sal-overlay { position: fixed; inset: 0; z-index: 10020; display: flex; justify-content: center; align-items: center; padding: 20px; background: #161512b8; }
+#sal-root .sal-panel { width: min(1060px, 100%); height: min(820px, 92dvh); max-height: 92vh; min-height: 370px; background: var(--sal-paper); color: var(--sal-ink); border: 1px solid #cfc5b3; border-radius: 16px; box-shadow: 0 25px 70px #0006; display: flex; flex-direction: column; overflow: hidden; }
+#sal-root .sal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 26px 16px; border-bottom: 1px solid var(--sal-line); }
+#sal-root .sal-header small { display: block; color: var(--sal-muted); font-family: Georgia, serif; font-size: 11px; letter-spacing: .17em; }
+#sal-root .sal-header h2 { margin: 5px 0 0; font-size: 24px; line-height: 1.4; letter-spacing: .07em; }
+#sal-root #sal-close { color: var(--sal-ink); border: 0; background: transparent; font-size: 33px; line-height: 1; padding: 4px 9px; }
+#sal-root .sal-content { flex: 1; min-height: 0; display: grid; grid-template-columns: 282px minmax(0,1fr); }
+#sal-root .sal-sidebar { border-right: 1px solid var(--sal-line); background: #f4efe5; display: flex; flex-direction: column; padding: 22px 17px; min-height: 0; gap: 10px; }
+#sal-root .sal-sidebar > label, #sal-root .sal-main label { font-size: 12px; color: #655b4f; letter-spacing: .05em; font-weight: 600; }
+#sal-root select, #sal-root input, #sal-root textarea { width: 100%; border: 1px solid #cfc4b2; color: #34312d; background: #fffdf8; border-radius: 7px; padding: 10px 11px; min-height: 41px; }
+#sal-root textarea { resize: vertical; min-height: 225px; line-height: 1.85; font-size: 15px; }
+#sal-root .sal-new { display: block; width: 100%; padding: 10px; color: #554a3e; background: #e8dfd0; border: 1px solid #cfc4b2; border-radius: 8px; font-weight: 700; }
+#sal-root .sal-new:hover { background: #e0d3be; }
+#sal-root .sal-sideheading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px; border-bottom: 1px solid var(--sal-line); margin-top: 14px; padding-bottom: 8px; }
+#sal-root .sal-sideheading span { font-size: 14px; font-weight: 700; }
+#sal-root .sal-sideheading small { font-size: 11px; color: var(--sal-muted); }
+#sal-root .sal-archive { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
+#sal-root .sal-empty { padding: 16px 4px; color: var(--sal-muted); font-size: 12px; }
+#sal-root .sal-item { width: 100%; text-align: left; display: flex; flex-direction: column; gap: 5px; padding: 12px 11px; border: 1px solid transparent; background: transparent; border-radius: 8px; color: var(--sal-ink); }
+#sal-root .sal-item:hover, #sal-root .sal-item:focus-visible { background: #eae0d0; border-color: #d3c7b3; }
+#sal-root .sal-item strong { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+#sal-root .sal-item small { font-size: 11px; color: var(--sal-muted); }
+#sal-root .sal-main { overflow-y: auto; min-height: 0; padding: 29px min(5vw, 49px); }
+#sal-root #sal-compose { display: flex; flex-direction: column; gap: 11px; }
+#sal-root .sal-eyebrow { font-family: Georgia, serif; letter-spacing: .14em; color: #86755e; font-size: 11px; margin: 0 0 4px; }
+#sal-root .sal-main h3 { font-size: 24px; margin: 0 0 8px; font-weight: 650; }
+#sal-root .sal-main h4 { font-size: 14px; color: #6a5d4c; margin: 24px 0 8px; }
+#sal-root .sal-primary { align-self: flex-end; background: #69533b; color: #fff8ef; padding: 11px 22px; border: 1px solid #69533b; border-radius: 8px; font-weight: 600; }
+#sal-root .sal-primary:disabled { opacity: .6; cursor: wait; }
+#sal-root .sal-primary:not(:disabled):hover { background: #543d29; }
+#sal-root .sal-letter { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.85; font-family: "Songti SC", "Noto Serif CJK SC", serif; font-size: 16px; color: #342e28; padding: 17px 20px; border: 1px solid #e2d9c9; background: #fffdf9; border-radius: 8px; }
+#sal-root .sal-response .sal-letter { background: #f6f0e5; }
+#sal-root .sal-meta { font-size: 12px; color: var(--sal-muted); }
+#sal-root .sal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 8px; }
+#sal-root .sal-actions button { background: #e9e0d1; color: #483e34; border: 1px solid #d2c7b5; border-radius: 7px; padding: 9px 15px; }
+#sal-root .sal-actions button:hover { background: #ded0bb; }
+#sal-root .sal-actions .sal-danger { margin-left: auto; color: #964e48; }
+#sal-root .sal-status { font-size: 12px; min-height: 19px; line-height: 1.7; color: #746a59; margin: 15px 0 0; }
+#sal-root .sal-status.sal-error { color: #b04636; font-weight: 600; }
+#sal-root .sal-footer { border-top: 1px solid var(--sal-line); padding: 11px 20px; text-align: center; color: #8b806e; font-size: 11px; }
+@media (max-width: 640px) {
+  #sal-root .sal-float { bottom: 82px; right: 12px; padding: 8px 12px; }
+  #sal-root .sal-overlay { padding: 0; align-items: stretch; }
+  #sal-root .sal-panel { height: 100dvh; max-height: 100dvh; width: 100%; min-height: 0; border: 0; border-radius: 0; }
+  #sal-root .sal-header { padding: 13px 17px 11px; }
+  #sal-root .sal-header h2 { font-size: 21px; }
+  #sal-root .sal-content { display: flex; flex-direction: column; }
+  #sal-root .sal-sidebar { flex: none; padding: 10px 14px; border-right: none; border-bottom: 1px solid var(--sal-line); gap: 7px; }
+  #sal-root .sal-sidebar .sal-sideheading { margin-top: 3px; }
+  #sal-root .sal-archive { flex: none; display: flex; flex-direction: row; max-height: 87px; overflow-x: auto; overflow-y: hidden; }
+  #sal-root .sal-item { flex: 0 0 155px; }
+  #sal-root .sal-empty { padding: 6px; }
+  #sal-root .sal-main { flex: 1; padding: 16px 17px 25px; }
+  #sal-root .sal-footer { padding: 8px 10px; font-size: 10px; }
+  #sal-root .sal-main h3 { font-size: 21px; }
+  #sal-root textarea { min-height: 205px; }
+}
