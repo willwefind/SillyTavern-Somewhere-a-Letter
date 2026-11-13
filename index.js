@@ -1,5 +1,5 @@
 import { recipients, generateLetter } from './src/engine.js';
-import { apiChoices } from './src/api.js';
+import { apiChoices, apiProfileStatus } from './src/api.js';
 import { saveLetter, deleteLetter, listAllLetters } from './src/storage.js';
 import { getDraft, saveDraft, clearDraft } from './src/drafts.js';
 import { createBackup, downloadJson, restoreBackup } from './src/backup.js';
@@ -493,9 +493,10 @@ function fillApiChoices() {
         select.append(unavailable);
     }
     select.value = prefs.profileId;
+    const info = apiProfileStatus(context());
     el('api-hint').textContent = prefs.profileId
-        ? '信箱使用所选连接预设独立生成回信，不会切换主聊天 API；需要先在酒馆连接管理器中创建有效连接。'
-        : '默认跟随酒馆当前 API，无需额外配置。';
+        ? '信箱使用所选连接预设独立生成回信，不影响主聊天。' + ' ' + info
+        : '默认跟随酒馆当前 API。' + ' ' + info;
 }
 function show() {
     el('overlay').hidden = false;
@@ -511,6 +512,30 @@ function hide() {
     el('overlay').hidden = true;
     el('open').setAttribute('aria-expanded', 'false');
     el('open').focus();
+}
+/**
+ * Provide two additional entry points for SillyTavern's mobile UI:
+ * a chat-bar Extensions menu item and a button inside the Extensions panel.
+ * All buttons open the same mailbox. No second copy of the mailbox is created.
+ */
+function installNativeEntryPoints() {
+    const items = [
+        { parent: document.getElementById('extensionsMenu'), id: 'sal-native-menu', label: '✉ 世界某处的来信' },
+        { parent: document.getElementById('extensions_settings'), id: 'sal-native-settings', label: '✉ 打开世界某处的来信' },
+    ];
+    for (const item of items) {
+        if (!item.parent || document.getElementById(item.id)) continue;
+        const entry = document.createElement('button');
+        entry.type = 'button';
+        entry.id = item.id;
+        entry.className = 'sal-native-entry menu_button menu_button_icon';
+        entry.textContent = item.label;
+        entry.addEventListener('click', event => {
+            event.stopPropagation();
+            show();
+        });
+        item.parent.append(entry);
+    }
 }
 function buildUi() {
     const root = document.createElement('div');
@@ -553,7 +578,7 @@ function buildUi() {
                   '<div class="sal-actions"><button id="sal-detail-star" type="button">☆ 收藏</button><button id="sal-copy" type="button">复制回信</button><button id="sal-image" type="button">导出 PNG</button><button id="sal-delete" class="sal-danger" type="button">删除存档</button></div>',
                 '</article>',
                 '<section id="sal-settings-view" hidden><p class="sal-eyebrow">MAILBOX PREFERENCES</p><h3>信箱设置</h3>',
-                  '<div class="sal-setting-section"><label for="sal-api-choice">回信 API 连接</label><select id="sal-api-choice"></select><p id="sal-api-hint" class="sal-setting-hint"></p></div>',
+                  '<div class="sal-setting-section"><label for="sal-api-choice">回信 API 连接</label><select id="sal-api-choice"></select><p id="sal-api-hint" class="sal-setting-hint"></p><button id="sal-api-refresh" class="sal-secondary" type="button">↻ 刷新连接列表</button><p class="sal-setting-hint">提示：请在酒馆的「API 连接」中先创建并保存 Connection Profile；已经能正常聊天但未保存预设，不会出现在这里。</p></div>',
                   '<div class="sal-setting-section"><label for="sal-theme-choice">界面主题</label><select id="sal-theme-choice"><option value="light">☀ 日间模式</option><option value="dark">☾ 夜间模式</option></select></div>',
                   '<div class="sal-setting-section"><h4>备份与恢复</h4><p class="sal-setting-hint">备份包含所有角色的信件、星标与草稿，保存在你的设备上。恢复不会覆盖已有信件。</p>',
                     '<div class="sal-backup-actions"><button id="sal-backup-export" type="button">↓ 导出 JSON 备份</button><button id="sal-backup-import" type="button">↑ 从 JSON 恢复</button><input id="sal-backup-file" type="file" accept=".json,application/json" hidden/></div>',
@@ -568,7 +593,8 @@ function buildUi() {
         '</div>',
     ].join('');
     document.body.append(root);
-    el('open').addEventListener('click', show);
+    installNativeEntryPoints();
+    el('open').addEventListener('click', () => { installNativeEntryPoints(); show(); });
     el('close').addEventListener('click', hide);
     el('overlay').addEventListener('click', event => { if (event.target === el('overlay')) hide(); });
     el('theme').addEventListener('click', () => applyTheme(prefs.theme === 'dark' ? 'light' : 'dark'));
@@ -601,6 +627,10 @@ function buildUi() {
     el('copy').addEventListener('click', copyReply);
     el('image').addEventListener('click', saveImage);
     el('delete').addEventListener('click', () => void removeCurrent());
+    el('api-refresh').addEventListener('click', () => {
+        fillApiChoices();
+        status('已重新检查酒馆保存的连接预设。');
+    });
     el('api-choice').addEventListener('change', () => {
         prefs.profileId = el('api-choice').value;
         savePrefs();
