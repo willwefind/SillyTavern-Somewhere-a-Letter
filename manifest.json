@@ -1,0 +1,12 @@
+{
+  "display_name": "Somewhere, a Letter · 世界某处的来信",
+  "loading_order": 101,
+  "requires": [],
+  "optional": [],
+  "js": "index.js",
+  "css": "style.css",
+  "author": "willwefind",
+  "version": "0.1.0",
+  "homePage": "https://github.com/willwefind/SillyTavern-Somewhere-a-Letter",
+  "auto_update": true
+}
