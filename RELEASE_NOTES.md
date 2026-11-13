@@ -28,7 +28,7 @@ https://github.com/willwefind/SillyTavern-Somewhere-a-Letter
 
 - 作者已在 **PC 和 iOS Safari** 实测核心功能，包括字体导入与 PNG 保存。其他设备／浏览器欢迎反馈。
 - 信件、草稿、收藏、字体均为**当前浏览器本地存储**。不同设备**不会自动同步**；请定期导出 JSON 备份。
-- 导入字体支持 TTF、OTF、WOFF、WOFF2，**单文件小于 12 MB，最多 12 款**。字体文件不会被包含在 JSON 信件备份中。
+- 导入字体支持 TTF、OTF、WOFF、WOFF2，**单文件不超过 12 MB，最多 12 款**。字体文件不会被包含在 JSON 信件备份中。
 - 信纸分页有移动端图片高度安全限制；若单页过长，将提示增加页数或缩小字号。
 - 需要提前在酒馆连接管理器中保存 Connection Profile，才能使用独立 API 选择功能。
 
@@ -36,7 +36,7 @@ https://github.com/willwefind/SillyTavern-Somewhere-a-Letter
 
 **GPL-3.0-only** · Copyright © 2026 willwefind
 
-允许修改、二次开发、商业使用与再分发，但分发修改后的版本需要遵守 GPL-3.0 的相应版权、许可证、修改说明及源代码提供义务。完整条款见 [LICENSE](./LICENSE)。
+允许修改、二次开发、商业使用与再分发，但分发修改后的版本需要遵守 GPL-3.0 的相应版权、许可证、修改说明及源代码提供义务。完整条款见 [LICENSE](https://github.com/willwefind/SillyTavern-Somewhere-a-Letter/blob/main/LICENSE)。
 
 Letter Studio 的部分排版思路参考同作者的 [拾句 Shiju](https://github.com/willwefind/shiju)。拾句独立采用 AGPL-3.0 许可证，请分别遵循两个项目各自的授权条款。
 
