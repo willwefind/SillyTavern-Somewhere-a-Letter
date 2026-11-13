@@ -500,8 +500,12 @@
         max-width: none;
         max-height: none;
         overflow: hidden;
+        /* Pocket-book behavior: the chat remains visible behind the mailbox. */
+        background: transparent;
+        pointer-events: none;
     }
     #sal-root .sal-panel.sal-mobile-panel {
+        pointer-events: auto;
         display: flex;
         flex-direction: column;
         overflow: hidden;
