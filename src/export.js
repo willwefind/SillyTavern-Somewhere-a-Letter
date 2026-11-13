@@ -1,121 +1,212 @@
-// Lightweight Canvas export; no font bundles, canvas libraries or external network calls.
-const W = 1080;
-const H = 1440;
-const MARGIN = 104;
-const LINE_HEIGHT = 53;
-const PAGE_LINES = 19;
+import { getFontStack } from './font-manager.js';
 
-function breakText(ctx, text, width) {
-    const lines = [];
-    const paragraphs = String(text || '').replace(/\r\n?/g, '\n').split('\n');
-    for (const paragraph of paragraphs) {
-        if (!paragraph) { lines.push(''); continue; }
-        const tokens = paragraph.match(/[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*|\s+|./gu) || [];
-        let current = '';
-        for (const token of tokens) {
-            if (ctx.measureText(current + token).width <= width) {
+/**
+ * Letter Studio rendering. Adapted from the user's Shiju workflow:
+ * kinsoku-aware wrapping, English whole-word wrapping and balanced page
+ * groups. Preview and the exported File objects use this exact renderer.
+ *
+ * No Shiju UI / font files or external dependencies are bundled.
+ */
+const W = 1080;
+const BASE_H = 1440;
+const MAX_H = 4096; // Keep individual PNG pages viable on mobile Safari.
+const PAD = 104;
+const BODY_TOP = 302;
+const FOOTER_SPACE = 145;
+const MAX_PAGES = 25;
+const NO_START = '，。、；：？！）》」』】〉…—·%,.;:?!”’';
+const NO_END = '（《「『【〈“‘';
+export const DEFAULT_STUDIO_OPTIONS = Object.freeze({
+    pages: 'auto', fontId: 'serif', fontSize: 30, inkColor: '#302d2a',
+});
+export const INK_PRESETS = Object.freeze([
+    { id: 'black', label: '墨黑', color: '#302d2a' },
+    { id: 'brown', label: '暖棕', color: '#77543c' },
+    { id: 'grey', label: '深灰', color: '#55585b' },
+    { id: 'blue', label: '深蓝', color: '#314960' },
+    { id: 'red', label: '暗红', color: '#824548' },
+]);
+export function normalizeStudioOptions(value = {}) {
+    const source = value && typeof value === 'object' ? value : {};
+    const number = Number(source.pages);
+    const pages = source.pages === 'auto' || !Number.isInteger(number) || number < 1 || number > 6
+        ? 'auto' : String(number);
+    const size = Number(source.fontSize);
+    return {
+        pages,
+        fontId: typeof source.fontId === 'string' && source.fontId.length < 128
+            ? source.fontId : DEFAULT_STUDIO_OPTIONS.fontId,
+        fontSize: Number.isFinite(size) ? Math.min(36, Math.max(24, Math.round(size / 2) * 2)) : 30,
+        inkColor: typeof source.inkColor === 'string' && /^#[0-9a-fA-F]{6}$/.test(source.inkColor)
+            ? source.inkColor : DEFAULT_STUDIO_OPTIONS.inkColor,
+    };
+}
+function textTokens(line) {
+    // Chinese glyphs individually, Latin runs together: never split English
+    // words unless a single word is wider than the entire writing area.
+    return line.match(/[A-Za-z0-9][A-Za-z0-9\-_.@/+']*|\s+|[\s\S]/gu) || [];
+}
+function wrapLine(ctx, text, width) {
+    const result = [];
+    let current = '';
+    for (let token of textTokens(text)) {
+        if (ctx.measureText(current + token).width <= width) {
+            current += token;
+            continue;
+        }
+        if (current) {
+            // Opening punctuation should not dangle at the right edge.
+            for (let n = 0; n < 3 && current && NO_END.includes(current.at(-1)); n++) {
+                token = current.at(-1) + token;
+                current = current.slice(0, -1);
+            }
+            // Keep closing punctuation off the left edge where possible.
+            if (NO_START.includes(token[0]) && result.length === 0 &&
+                ctx.measureText(current + token).width <= width * 1.08) {
                 current += token;
                 continue;
             }
-            if (current.trim()) { lines.push(current.trimEnd()); current = ''; }
-            if (/^\s+$/u.test(token)) continue;
-            // Only split words if they exceed the full width.
-            let rest = token;
-            while (ctx.measureText(rest).width > width) {
-                let piece = '';
-                for (const char of Array.from(rest)) {
-                    if (ctx.measureText(piece + char).width > width) break;
-                    piece += char;
-                }
-                if (!piece) break;
-                lines.push(piece);
-                rest = rest.slice(piece.length);
-            }
-            current = rest;
+            if (current.trim()) result.push(current.trimEnd());
+            current = '';
         }
-        lines.push(current.trimEnd());
+        if (/^\s+$/u.test(token)) continue;
+        // Overlong Latin words are split only when unavoidable.
+        while (ctx.measureText(token).width > width) {
+            let part = '';
+            for (const ch of Array.from(token)) {
+                if (part && ctx.measureText(part + ch).width > width) break;
+                part += ch;
+            }
+            if (!part) break;
+            result.push(part);
+            token = token.slice(part.length);
+        }
+        current = token;
     }
-    return lines;
+    result.push(current.trimEnd());
+    return result;
 }
-
-function drawPage(letter, lines, index, count) {
+function makeItems(ctx, text, fontSize, fontStack) {
+    ctx.font = fontSize + 'px ' + fontStack;
+    const lines = String(text || '').replace(/\r\n?/g, '\n').split('\n');
+    const items = [];
+    const maxWidth = W - PAD * 2;
+    for (const part of lines) {
+        if (!part) { items.push(''); continue; }
+        items.push(...wrapLine(ctx, part, maxWidth));
+    }
+    return items.length ? items : [''];
+}
+function paginate(items, count, lineHeight) {
+    if (!count) {
+        const cap = Math.max(1, Math.floor((BASE_H - BODY_TOP - FOOTER_SPACE) / lineHeight));
+        const pages = [];
+        for (let i = 0; i < items.length; i += cap) pages.push(items.slice(i, i + cap));
+        return pages;
+    }
+    // Even distribution: each page takes a fair number of wrapped lines.
+    // Never insert blank pages merely to satisfy a requested page count.
+    const actualCount = Math.min(count, Math.max(1, items.length));
+    const pages = [];
+    let index = 0;
+    for (let p = 0; p < actualCount; p++) {
+        const take = Math.ceil((items.length - index) / (actualCount - p));
+        pages.push(items.slice(index, index + take));
+        index += take;
+    }
+    return pages;
+}
+export async function planLetterPages(letter, settings = {}) {
+    const opts = normalizeStudioOptions(settings);
+    const fontStack = await getFontStack(opts.fontId);
     const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('当前浏览器无法创建图片画布。');
-    ctx.fillStyle = '#f6f2e8'; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#292a27'; ctx.textBaseline = 'top';
-    ctx.font = '26px Georgia, serif';
-    ctx.fillText('SOMEWHERE, A LETTER', MARGIN, 75);
-    ctx.strokeStyle = '#cec6b7'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(MARGIN, 132); ctx.lineTo(W - MARGIN, 132); ctx.stroke();
-    ctx.font = 'bold 42px "Songti SC", "Noto Serif CJK SC", serif';
-    const heading = '回信 · ' + (letter.title || '无题');
-    let title = heading;
-    while (ctx.measureText(title).width > W - MARGIN * 2 && title.length > 2) title = title.slice(0, -2) + '…';
-    ctx.fillText(title, MARGIN, 177);
-    ctx.fillStyle = '#766d5f';
-    ctx.font = '23px "Noto Sans CJK SC", sans-serif';
-    ctx.fillText('FROM  ' + String(letter.characterName || '').slice(0, 36), MARGIN, 243);
+    if (!ctx) throw new Error('当前浏览器无法排版 PNG。');
+    const lineHeight = Math.round(opts.fontSize * 1.7);
+    const items = makeItems(ctx, letter.reply, opts.fontSize, fontStack);
+    const wanted = opts.pages === 'auto' ? 0 : Number(opts.pages);
+    const pages = paginate(items, wanted, lineHeight);
+    if (pages.length > MAX_PAGES) {
+        throw new Error('自动分页超过 25 页，请调小字号，或先复制保存文字。');
+    }
+    const usedHeight = Math.max(...pages.map(lines => lines.length * lineHeight));
+    const height = Math.max(BASE_H, BODY_TOP + usedHeight + FOOTER_SPACE);
+    if (height > MAX_H) {
+        throw new Error('指定页数下信纸太长，iPhone 可能无法保存。请增加页数或调小字号。');
+    }
+    return { pages, height, width: W, opts, fontStack, lineHeight };
+}
+function localDate(iso) {
+    const date = new Date(iso);
+    return Number.isFinite(date.getTime())
+        ? [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0')].join('-') : '';
+}
+function drawPage(letter, plan, index) {
+    const c = document.createElement('canvas');
+    c.width = plan.width;
+    c.height = plan.height;
+    const ctx = c.getContext('2d');
+    if (!ctx) throw new Error('无法创建信纸画布。');
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#f7f3e9';
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = plan.opts.inkColor;
+    ctx.font = '26px Georgia,serif';
+    ctx.fillText('SOMEWHERE, A LETTER', PAD, 78);
+    ctx.strokeStyle = '#cdc3b2';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(PAD, 134); ctx.lineTo(W - PAD, 134); ctx.stroke();
+
+    ctx.font = 'bold 41px ' + plan.fontStack;
+    const subject = '回信 · ' + (letter.title || '无题');
+    let title = subject;
+    while (title.length > 2 && ctx.measureText(title).width > W - PAD * 2) {
+        title = title.slice(0, -2) + '…';
+    }
+    ctx.fillText(title, PAD, 176);
+    ctx.font = '23px ' + plan.fontStack;
+    ctx.globalAlpha = .78;
+    ctx.fillText('FROM  ' + String(letter.characterName || '').slice(0, 40), PAD, 245);
     ctx.textAlign = 'right';
-    const date = new Date(letter.createdAt);
-    const localDate = Number.isFinite(date.getTime())
-        ? [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-')
-        : String(letter.createdAt || '').slice(0, 10);
-    ctx.fillText(localDate, W - MARGIN, 243);
+    ctx.fillText(localDate(letter.createdAt), W - PAD, 245);
     ctx.textAlign = 'left';
-    ctx.font = '32px "Songti SC", "Noto Serif CJK SC", "SimSun", serif';
-    ctx.fillStyle = '#302d2a';
-    for (let j = 0; j < lines.length; j++) ctx.fillText(lines[j], MARGIN, 308 + j * LINE_HEIGHT);
-    ctx.fillStyle = '#8f8474'; ctx.font = '22px Georgia, serif';
-    ctx.fillText('A LETTER FROM ANOTHER WORLD', MARGIN, 1350);
-    ctx.textAlign = 'right'; ctx.fillText((index + 1) + ' / ' + count, W - MARGIN, 1350);
-    return canvas;
-}
+    ctx.globalAlpha = 1;
 
-function createPageCanvases(letter) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('当前浏览器不支持图片导出。');
-    ctx.font = '32px "Songti SC", "Noto Serif CJK SC", "SimSun", serif';
-    const lines = breakText(ctx, letter.reply, W - MARGIN * 2);
-    const pages = Math.max(1, Math.ceil(lines.length / PAGE_LINES));
-    if (pages > 25) throw new Error('回信超过25页，请先复制文字保存。');
-    const canvases = [];
-    for (let i = 0; i < pages; i++) {
-        canvases.push(drawPage(
-            letter, lines.slice(i * PAGE_LINES, (i + 1) * PAGE_LINES), i, pages));
+    ctx.font = plan.opts.fontSize + 'px ' + plan.fontStack;
+    let y = BODY_TOP;
+    for (const line of plan.pages[index]) {
+        if (line) ctx.fillText(line, PAD, y);
+        y += plan.lineHeight;
     }
-    return canvases;
-}
 
-/**
- * Encode PNG as a proper binary file, not a data: URI.
- * This is intentionally separate from initiating a browser download.
- * On iOS, our UI will prepare once, then offer a second, real tap to
- * invoke the native share sheet (File/Photos) or an image preview.
- */
-export async function prepareReplyImages(letter) {
-    const pages = createPageCanvases(letter);
+    ctx.globalAlpha = .65;
+    ctx.font = '22px Georgia,serif';
+    ctx.fillText('A LETTER FROM ANOTHER WORLD', PAD, plan.height - 84);
+    ctx.textAlign = 'right';
+    ctx.fillText((index + 1) + ' / ' + plan.pages.length, W - PAD, plan.height - 84);
+    ctx.globalAlpha = 1;
+    return c;
+}
+export async function prepareReplyImages(letter, settings = {}) {
+    const plan = await planLetterPages(letter, settings);
     const files = [];
     const safeId = String(letter.id || 'letter').replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 80);
-    for (let i = 0; i < pages.length; i++) {
+    for (let i = 0; i < plan.pages.length; i++) {
+        const canvas = drawPage(letter, plan, i);
         const blob = await new Promise((resolve, reject) => {
-            pages[i].toBlob(result => result ? resolve(result)
-                : reject(new Error('第 ' + (i + 1) + ' 页无法编码为 PNG。')), 'image/png');
+            canvas.toBlob(value => value ? resolve(value)
+                : reject(new Error('第 ' + (i + 1) + ' 页无法生成 PNG。')), 'image/png');
         });
-        const suffix = pages.length > 1 ? '-p' + String(i + 1) : '';
+        const suffix = plan.pages.length > 1 ? '-p' + (i + 1) : '';
         files.push(new File([blob], 'Somewhere-a-Letter-' + safeId + suffix + '.png', {
-            type: 'image/png',
-            lastModified: Date.now(),
+            type: 'image/png', lastModified: Date.now(),
         }));
     }
     return files;
 }
-
-/** Desktop browsers: Blob object URLs instead of data: download links. */
-export async function exportAsPng(letter) {
-    const files = await prepareReplyImages(letter);
+export async function exportAsPng(letter, settings = {}) {
+    const files = await prepareReplyImages(letter, settings);
     for (const file of files) {
         const url = URL.createObjectURL(file);
         const anchor = document.createElement('a');
@@ -124,11 +215,8 @@ export async function exportAsPng(letter) {
         document.body.append(anchor);
         anchor.click();
         anchor.remove();
-        // Browser downloads are asynchronous: never revoke immediately.
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-        if (files.length > 1) {
-            await new Promise(resolve => setTimeout(resolve, 180));
-        }
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        if (files.length > 1) await new Promise(resolve => setTimeout(resolve, 180));
     }
     return files.length;
 }
