@@ -1,4 +1,4 @@
-import { prepareReplyImages, exportAsPng, normalizeStudioOptions, DEFAULT_STUDIO_OPTIONS, INK_PRESETS } from './export.js';
+import { prepareReplyImages, normalizeStudioOptions, DEFAULT_STUDIO_OPTIONS, INK_PRESETS } from './export.js';
 import { listFonts, importFont, deleteFont } from './font-manager.js';
 
 const PREFS_KEY = 'somewhere-a-letter:studio:v1';
@@ -23,7 +23,7 @@ function readOptions() {
  * A self-contained on-demand studio. Only initialized when the plugin loads;
  * no letter data or fonts are placed in model prompts or shared with a server.
  */
-export function createLetterStudio({ panel, onStatus }) {
+export function createLetterStudio({ panel }) {
     if (!panel) throw new Error('找不到信箱面板。');
     let options = readOptions();
     let letter = null;
@@ -174,11 +174,14 @@ export function createLetterStudio({ panel, onStatus }) {
         }
     }
     function scheduleRender() {
+        // Invalidate any earlier in-flight preview immediately.
+        sequence++;
         clearTimeout(debounce);
         debounce = setTimeout(() => { debounce = null; void render(); }, 180);
     }
     async function open(nextLetter) {
         if (!nextLetter) return;
+        const opening = ++sequence;
         letter = nextLetter;
         page = 0;
         host.hidden = false;
@@ -186,7 +189,7 @@ export function createLetterStudio({ panel, onStatus }) {
         setNotice('正在读取字体并排版…');
         try {
             await populateFonts();
-            if (!letter || host.hidden) return;
+            if (!letter || host.hidden || opening !== sequence) return;
             await render();
         } catch (error) {
             setNotice('信纸工作台初始化失败：' + (error?.message || String(error)), true);
