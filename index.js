@@ -362,7 +362,9 @@ function setView(view) {
     if (isArchiveView()) renderArchive();
     else updateNav();
     if (view === 'settings') fillApiChoices();
-    if (view === 'compose') el('subject').focus();
+    // iOS Safari may pan/zoom the entire page when a small floating-panel
+    // input receives programmatic focus. On phones, let the user tap the field.
+    if (view === 'compose' && window.innerWidth > 760) el('subject').focus();
 }
 function read(letter) {
     if (isArchiveView()) state.previousView = state.view;
