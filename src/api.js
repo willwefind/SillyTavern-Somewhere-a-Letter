@@ -60,3 +60,29 @@ export async function generateViaApi(context, { systemPrompt, prompt, profileId 
     if (typeof content !== 'string') throw new Error('所选 API 未返回可识别的文本回复。');
     return content;
 }
+
+/**
+ * Human-readable reason when only the current-API choice is available.
+ * A working API connection is not the same as a saved Connection Profile.
+ */
+export function apiProfileStatus(context) {
+    const service = context.ConnectionManagerRequestService;
+    if (!service) return '当前酒馆未提供连接预设接口。默认 API 仍可正常使用。';
+    if (context.extensionSettings?.disabledExtensions?.includes('connection-manager')) {
+        return '酒馆的 Connection Profiles（连接配置）扩展已被禁用。请在「扩展 → 管理扩展」中启用。';
+    }
+    const saved = context.extensionSettings?.connectionManager?.profiles;
+    if (Array.isArray(saved) && saved.length === 0) {
+        return '还没有已保存的连接预设。请先在酒馆的「API 连接」面板创建 Connection Profile（连接配置），然后点击下方「刷新连接列表」。单纯连接过 API 不会自动成为预设。';
+    }
+    try {
+        const supported = service.getSupportedProfiles();
+        if (supported.length) return '找到 ' + supported.length + ' 个可用于独立回信的连接预设。';
+        if (Array.isArray(saved) && saved.length) {
+            return '找到了 ' + saved.length + ' 个已保存配置，但目前没有符合要求的聊天补全或文本补全连接；请检查其 API 类型和模型设置。';
+        }
+        return '暂无可用的连接预设。请在酒馆「API 连接」中创建并保存一个 Connection Profile，之后点击「刷新连接列表」。';
+    } catch (error) {
+        return '读取连接预设失败：' + (error?.message || String(error)) + '。默认 API 不受影响。';
+    }
+}
