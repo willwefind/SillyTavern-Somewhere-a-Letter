@@ -68,10 +68,16 @@ function wrapLine(ctx, text, width) {
                 continue;
             }
             if (prev.length > 1) {
-                // Pull the previous glyph to the new line; never strand a
-                // punctuation mark as the first character of a line.
-                const moved = prev.at(-1);
-                result[last] = prev.slice(0, -1);
+                // Move a glyph together with any trailing close punctuation.
+                // Moving only one punctuation character can still leave a
+                // Chinese full stop at the start of the following line.
+                let remaining = prev;
+                let moved = '';
+                do {
+                    moved = remaining.at(-1) + moved;
+                    remaining = remaining.slice(0, -1);
+                } while (remaining.length > 1 && NO_START.includes(moved[0]));
+                result[last] = remaining;
                 current = moved;
             }
         }
