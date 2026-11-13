@@ -505,6 +505,7 @@ function fillApiChoices() {
 }
 function show() {
     el('overlay').hidden = false;
+    el('panel').setAttribute('aria-modal', String(window.innerWidth > 760));
     panelLayout?.fit();
     el('open').setAttribute('aria-expanded', 'true');
     void refreshInbox();
@@ -604,6 +605,13 @@ function buildUi() {
     attachMailboxLauncher(el('open'), () => { installNativeEntryPoints(); show(); });
     el('close').addEventListener('click', hide);
     el('overlay').addEventListener('click', event => { if (event.target === el('overlay')) hide(); });
+    // On phones the panel floats like 何曾梦觉·随身册: tap outside to close,
+    // without blocking the underlying SillyTavern chat or its controls.
+    document.addEventListener('pointerdown', event => {
+        if (window.innerWidth > 760 || el('overlay').hidden || state.busy) return;
+        if (el('panel').contains(event.target) || el('open').contains(event.target)) return;
+        hide();
+    }, true);
     el('theme').addEventListener('click', () => applyTheme(prefs.theme === 'dark' ? 'light' : 'dark'));
     el('theme-choice').addEventListener('change', () => applyTheme(el('theme-choice').value));
     el('settings').addEventListener('click', () => setView('settings'));
