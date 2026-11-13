@@ -556,3 +556,66 @@
     #sal-root .sal-letter { font-size: 14px; line-height: 1.75; }
     #sal-root textarea { min-height: 155px; }
 }
+
+
+/* v0.2.4: iOS keyboard — prevent autofocus zoom and preserve the editor. */
+@media (max-width: 760px) {
+    /* iOS Safari auto-zooms inputs with fonts smaller than 16px. This is a
+       frequent cause of the viewport jumping off our floating panel. */
+    #sal-root input:not([type="hidden"]),
+    #sal-root textarea,
+    #sal-root select,
+    #sal-root .sal-top-search input,
+    #sal-root .sal-picker input {
+        font-size: 16px !important;
+    }
+
+    #sal-root[data-keyboard="true"] .sal-panel.sal-mobile-panel {
+        max-height: none;
+    }
+    #sal-root[data-keyboard="true"] .sal-header {
+        padding: 5px 10px;
+        min-height: 39px;
+    }
+    #sal-root[data-keyboard="true"] .sal-brand small {
+        display: none;
+    }
+    #sal-root[data-keyboard="true"] .sal-brand h2 {
+        margin: 0;
+        font-size: 14px;
+    }
+    #sal-root[data-keyboard="true"] .sal-header-actions .sal-icon-btn {
+        height: 28px;
+        width: 29px;
+        font-size: 19px;
+    }
+    #sal-root[data-keyboard="true"] .sal-sidebar {
+        padding: 5px 8px;
+        gap: 4px;
+    }
+    #sal-root[data-keyboard="true"] .sal-sidebar .sal-new,
+    #sal-root[data-keyboard="true"] .sal-sidebar .sal-nav {
+        display: none;
+    }
+    #sal-root[data-keyboard="true"] .sal-recipient-area {
+        padding-top: 2px;
+    }
+    #sal-root[data-keyboard="true"] .sal-recipient-area label {
+        display: none;
+    }
+    #sal-root[data-keyboard="true"] .sal-current {
+        padding: 6px;
+        min-height: 32px;
+        font-size: 11px;
+    }
+    #sal-root[data-keyboard="true"] .sal-main {
+        padding: 8px 11px 12px;
+        overflow-y: auto;
+        min-height: 0;
+    }
+    #sal-root[data-keyboard="true"] .sal-main h3 { font-size: 17px; margin: 0; }
+    #sal-root[data-keyboard="true"] .sal-eyebrow { display: none; }
+    #sal-root[data-keyboard="true"] #sal-compose { gap: 7px; }
+    #sal-root[data-keyboard="true"] #sal-compose textarea { min-height: 120px; }
+    #sal-root[data-keyboard="true"] .sal-top-search input { min-height: 36px; }
+}
