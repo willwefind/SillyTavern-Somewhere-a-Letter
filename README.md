@@ -2,7 +2,7 @@
 
 一个轻量级 [SillyTavern](https://github.com/SillyTavern/SillyTavern) 前端扩展。给某个角色写一封信，收到独立回信，在自己的信箱里收藏和保存。
 
-> **v0.2.1 兼容性修订测试版**。根据 SillyTavern 1.19.0 PC 和手机使用反馈，改善 API 预设空列表提示与手机信箱入口。真实手机浏览器的兼容性仍需测试。
+> **v0.2.2 移动端入口修订测试版**。信封入口已改成纯图标、支持拖动并记忆位置；不同手机浏览器的实际显示仍需测试。
 
 ## 安装和更新
 
@@ -14,7 +14,19 @@ https://github.com/willwefind/SillyTavern-Somewhere-a-Letter
 
 已安装用户：打开 **扩展 → 管理扩展（Manage Extensions）**，找到 Somewhere, a Letter → **检查/安装更新**，完成后刷新酒馆网页。单独刷新网页不会自动把 GitHub 的修改拉到本地。
 
-**无需卸载重装，不要清理浏览器站点数据。** 旧信、星标、草稿保存在原来的 IndexedDB / LocalStorage 位置，v0.2.1 不迁移、不清空旧存档。
+**无需卸载重装，不要清理浏览器站点数据。** 旧信、星标、草稿保存在原来的 IndexedDB / LocalStorage 位置，v0.2.2 不迁移、不清空旧存档。
+
+## v0.2.2 · 随身信箱入口
+
+依据《何曾梦觉》角色卡中「随身册」的移动端定位方案调整信箱入口：
+
+- **纯图标小印**：悬浮入口仅显示信封符号，不再显示「信箱」文字，节省手机屏幕空间。按钮带文字说明及无障碍标签。
+- **PC / 手机都可以拖动**：按住图标移动，超过 5 像素才算拖动；轻点正常打开信箱，拖动结束不会误触打开。
+- **位置自动记忆**：拖动完成后把坐标保存在本浏览器 LocalStorage；下次刷新酒馆仍在原位置。
+- **移动端定位修正**：改为 JavaScript 根据 `innerWidth / innerHeight` 设置明确的 `left / top`，不再使用容易受到部分手机酒馆页面 transform 影响的 `right / bottom`；屏幕缩小或转屏时自动保持图标在可见范围内。
+- 保留 v0.2.1 原生扩展菜单入口作为备用，不新增依赖，也不触碰旧信件、API 配置、收藏与草稿。
+
+**测试建议**：PC 端拖动信封后刷新，检查位置记忆；手机端分别测试单击、长按拖动、上下左右挪动、转屏后是否仍可点击。悬浮入口在页面最初会出现在右侧、聊天输入区上方，之后以你拖动保存的位置为准。
 
 ## v0.2.1 修复内容
 
@@ -74,6 +86,7 @@ https://github.com/willwefind/SillyTavern-Somewhere-a-Letter
 manifest.json       扩展清单
 index.js            导航、统一信件列表、搜索、阅读、写信、设置
 style.css           双栏布局 / 手机适配 / 日夜主题
+src/launcher.js     可拖动信封小印与本地位置记忆
 src/engine.js       角色和主世界书读取、独立回信构建
 src/api.js          当前酒馆 API / Connection Manager 独立预设
 src/storage.js      IndexedDB 存档与备份恢复
