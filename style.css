@@ -16,6 +16,20 @@
 #sal-root .sal-sidebar { border-right: 1px solid var(--sal-line); background: #f4efe5; display: flex; flex-direction: column; padding: 22px 17px; min-height: 0; gap: 10px; }
 #sal-root .sal-sidebar > label, #sal-root .sal-main label { font-size: 12px; color: #655b4f; letter-spacing: .05em; font-weight: 600; }
 #sal-root select, #sal-root input, #sal-root textarea { width: 100%; border: 1px solid #cfc4b2; color: #34312d; background: #fffdf8; border-radius: 7px; padding: 10px 11px; min-height: 41px; }
+
+/* v0.1.1 searchable recipient picker */
+#sal-root .sal-picker { position: relative; width: 100%; z-index: 7; }
+#sal-root .sal-picker input[type="search"] { padding-right: 10px; }
+#sal-root .sal-current { font-size: 12px; color: #655743; background: #e9dfcf; border: 1px solid #d7cab8; border-radius: 7px; padding: 9px 10px; line-height: 1.4; overflow-wrap: anywhere; }
+#sal-root .sal-results { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 9; max-height: min(300px, 45vh); overflow-y: auto; overscroll-behavior: contain; background: #fffdf8; border: 1px solid #bdb09c; border-radius: 8px; box-shadow: 0 10px 26px #30241635; padding: 5px; }
+#sal-root .sal-result-caption { padding: 7px 9px; font-size: 11px; line-height: 1.5; color: #827563; }
+#sal-root .sal-result-empty { font-size: 12px; color: #827563; padding: 15px 10px; }
+#sal-root .sal-result { width: 100%; border: 0; border-radius: 5px; background: transparent; color: #3f372c; font-size: 13px; padding: 9px 8px; display: flex; align-items: center; justify-content: space-between; text-align: left; gap: 10px; min-height: 39px; }
+#sal-root .sal-result span { overflow-wrap: anywhere; }
+#sal-root .sal-result small { font-size: 10px; flex: none; color: #8a7a63; }
+#sal-root .sal-result[aria-selected="true"] { font-weight: 700; background: #f2eadc; }
+#sal-root .sal-result:hover, #sal-root .sal-result.sal-active { background: #e8d9c5; }
+#sal-root .sal-result:focus-visible { outline-offset: -2px; }
 #sal-root textarea { resize: vertical; min-height: 225px; line-height: 1.85; font-size: 15px; }
 #sal-root .sal-new { display: block; width: 100%; padding: 10px; color: #554a3e; background: #e8dfd0; border: 1px solid #cfc4b2; border-radius: 8px; font-weight: 700; }
 #sal-root .sal-new:hover { background: #e0d3be; }
