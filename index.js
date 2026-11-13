@@ -102,6 +102,7 @@ function read(letter) {
     el('original').textContent = letter.body;
     el('reply').textContent = letter.reply;
     el('sign').textContent = letter.signature ? '署名：' + letter.signature : '匿名来信';
+    el('delete').hidden = Boolean(letter.unsaved);
     mode('reading');
     status('');
 }
@@ -135,20 +136,19 @@ async function send(event) {
         const output = await generateLetter(context(), letter.characterId, letter);
         letter.reply = output.text;
         letter.characterName = output.characterName;
+        let saveWarning = '';
         try {
             await saveLetter(letter);
             await refreshList();
-            status('回信已送达并保存在这个浏览器中。');
         } catch (saveError) {
-            status('回信已经生成，但本地保存失败：' + saveError.message + '。请立即复制或导出。', true);
+            letter.unsaved = true;
+            saveWarning = '回信已生成但本地保存失败：' + saveError.message + '。请立即复制或导出。';
         }
         read(letter);
         el('subject').value = '';
         el('body').value = '';
         el('signature').value = '';
-        if (el('status').classList.contains('sal-error') === false) {
-            status('回信已送达。旧信不会被用于下一次生成。');
-        }
+        status(saveWarning || '回信已送达并存档；旧信不会被用于下一次生成。', Boolean(saveWarning));
     } catch (error) {
         status('寄信失败：' + (error.message || String(error)), true);
     } finally {
