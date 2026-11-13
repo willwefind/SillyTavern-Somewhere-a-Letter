@@ -9,7 +9,7 @@ export function recipients(context) {
 async function fullCharacter(context, id) {
     let c = context.characters?.find(item => String(item?.avatar) === String(id));
     if (!c) throw new Error('角色不存在。');
-    if (!c.data && typeof context.getOneCharacter === 'function') {
+    if ((!c.data || (!('description' in c.data) && !('personality' in c.data))) && typeof context.getOneCharacter === 'function') {
         await context.getOneCharacter(c.avatar);
         c = context.characters?.find(item => String(item?.avatar) === String(id));
     }
