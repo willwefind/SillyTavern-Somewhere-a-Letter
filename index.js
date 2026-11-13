@@ -5,7 +5,7 @@ import { attachMailboxPanel } from './src/panel.js';
 import { saveLetter, deleteLetter, listAllLetters } from './src/storage.js';
 import { getDraft, saveDraft, clearDraft } from './src/drafts.js';
 import { createBackup, downloadJson, restoreBackup } from './src/backup.js';
-import { exportAsPng, prepareReplyImages } from './src/export.js';
+import { createLetterStudio } from './src/studio.js';
 
 const PREFIX = 'sal';
 const PREFS_KEY = 'somewhere-a-letter:preferences:v2';
@@ -13,11 +13,11 @@ const RECENTS_KEY = 'somewhere-a-letter:recent-recipients:v1';
 const MAX_RESULTS = 40;
 const VIEWS = ['all', 'starred', 'character', 'compose', 'reading', 'settings'];
 let panelLayout;
+let studio;
 const state = {
     selected: '', people: [], items: [], current: null, busy: false,
     request: 0, activeIndex: -1, visiblePeople: [],
     view: 'all', previousView: 'all',
-    exportFiles: [], exportUrls: [], exportPage: 0,
 };
 function el(id) { return document.getElementById(PREFIX + '-' + id); }
 function context() {
@@ -457,94 +457,18 @@ function copyReply() {
         .then(() => status('已复制回信。'))
         .catch(() => status('复制失败，请手动复制信件正文。', true));
 }
-function isIOSDevice() {
-    const agent = navigator.userAgent || '';
-    return /iPhone|iPad|iPod/i.test(agent)
-        || (/Macintosh/i.test(agent) && navigator.maxTouchPoints > 1);
-}
-function canNativeShare(files) {
-    try {
-        return typeof navigator.share === 'function'
-            && (typeof navigator.canShare !== 'function' || navigator.canShare({ files }));
-    } catch {
-        return false;
-    }
-}
 function closeImagePreview() {
-    el('image-preview').hidden = true;
-    el('preview-image').removeAttribute('src');
-    for (const url of state.exportUrls) URL.revokeObjectURL(url);
-    state.exportUrls = [];
-    state.exportFiles = [];
-    state.exportPage = 0;
-}
-function showImagePage(index) {
-    const files = state.exportFiles;
-    if (!files.length) return;
-    state.exportPage = Math.max(0, Math.min(files.length - 1, index));
-    el('preview-image').src = state.exportUrls[state.exportPage];
-    el('preview-count').textContent = (state.exportPage + 1) + ' / ' + files.length;
-    el('preview-prev').disabled = state.exportPage === 0;
-    el('preview-next').disabled = state.exportPage >= files.length - 1;
-    el('preview-share-page').disabled = !canNativeShare([files[state.exportPage]]);
-    el('preview-share-all').hidden = files.length < 2;
-    el('preview-share-all').disabled = !canNativeShare(files);
-    el('preview-hint').textContent = files.length > 1
-        ? '这是分为 ' + files.length + ' 页的回信。可以一次分享全部，也可以逐页保存；长按图片还可尝试直接存储图像。'
-        : '在系统分享菜单中选择「存储到文件」或保存图像；也可以长按图片保存。';
-    el('preview-hint').textContent += canNativeShare([files[state.exportPage]])
-        ? '' : ' 此浏览器未提供文件分享，请长按下方图片或点击「打开原图」。';
-}
-async function shareReplyFiles(all = false) {
-    const files = all ? state.exportFiles : [state.exportFiles[state.exportPage]];
-    if (!files.length) return;
-    if (!canNativeShare(files)) {
-        el('preview-hint').textContent = '当前浏览器不支持直接分享这些图片，请逐页长按图片，或在新标签页打开原图后保存。';
-        return;
-    }
-    try {
-        // Invoked directly from a real button click, after PNGs are ready.
-        // iOS requires a fresh user gesture for the native share sheet.
-        await navigator.share({ files, title: 'Somewhere, a Letter' });
-        el('preview-hint').textContent = '系统分享菜单已关闭。是否保存成功取决于你在分享菜单中的操作；仍可继续预览其他页。';
-    } catch (error) {
-        if (error?.name === 'AbortError') return;
-        el('preview-hint').textContent = '系统分享没有完成：' + (error?.message || String(error))
-            + '。请尝试逐页分享，或长按图片保存。';
-    }
-}
-function openOriginalImage() {
-    const url = state.exportUrls[state.exportPage];
-    if (!url) return;
-    // Keep this inside the explicit click handler so Safari allows the new tab.
-    const opened = window.open(url, '_blank');
-    if (opened) opened.opener = null;
-    else el('preview-hint').textContent = '浏览器可能拦截了新标签页；请长按下方预览图片尝试保存。';
+    studio?.close();
 }
 async function saveImage() {
-    if (!state.current || !el('image-preview').hidden) return;
+    if (!state.current || studio?.visible) return;
     const button = el('image');
     button.disabled = true;
     try {
-        if (isIOSDevice()) {
-            // Never auto-click an <a download> on iOS. Pre-render all pages and
-            // require the next explicit tap to invoke native file sharing.
-            const files = await prepareReplyImages(state.current);
-            closeImagePreview();
-            state.exportFiles = files;
-            state.exportUrls = files.map(file => URL.createObjectURL(file));
-            el('image-preview').hidden = false;
-            showImagePage(0);
-            status('信纸已生成，请在预览中使用系统分享保存 PNG。');
-        } else {
-            const pages = await exportAsPng(state.current);
-            status(pages === 1
-                ? '已请求浏览器下载 PNG，请检查下载记录。'
-                : '已请求浏览器下载 ' + pages + ' 页 PNG，请检查下载记录及多文件下载权限。');
-        }
+        await studio.open(state.current);
+        status('可在信纸工作台调整分页、字体、字号和墨色后导出 PNG。');
     } catch (error) {
-        closeImagePreview();
-        status('图片导出失败：' + (error?.message || String(error)), true);
+        status('打开信纸工作台失败：' + (error?.message || String(error)), true);
     } finally {
         button.disabled = false;
     }
@@ -671,7 +595,7 @@ function buildUi() {
                 '<article id="sal-reading" hidden><p class="sal-eyebrow">A LETTER HAS ARRIVED</p><h3 id="sal-read-title"></h3><p id="sal-read-meta" class="sal-meta"></p>',
                   '<section><h4>寄出的信</h4><p id="sal-sign" class="sal-meta"></p><div id="sal-original" class="sal-letter"></div></section>',
                   '<section class="sal-response"><h4>收到的回信</h4><div id="sal-reply" class="sal-letter"></div></section>',
-                  '<div class="sal-actions"><button id="sal-detail-star" type="button">☆ 收藏</button><button id="sal-copy" type="button">复制回信</button><button id="sal-image" type="button">导出 PNG</button><button id="sal-delete" class="sal-danger" type="button">删除存档</button></div>',
+                  '<div class="sal-actions"><button id="sal-detail-star" type="button">☆ 收藏</button><button id="sal-copy" type="button">复制回信</button><button id="sal-image" type="button">排版／导出 PNG</button><button id="sal-delete" class="sal-danger" type="button">删除存档</button></div>',
                 '</article>',
                 '<section id="sal-settings-view" hidden><p class="sal-eyebrow">MAILBOX PREFERENCES</p><h3>信箱设置</h3>',
                   '<div class="sal-setting-section"><label for="sal-api-choice">回信 API 连接</label><select id="sal-api-choice"></select><p id="sal-api-hint" class="sal-setting-hint"></p><button id="sal-api-refresh" class="sal-secondary" type="button">↻ 刷新连接列表</button><p class="sal-setting-hint">提示：请在酒馆的「API 连接」中先创建并保存 Connection Profile；已经能正常聊天但未保存预设，不会出现在这里。</p></div>',
@@ -685,19 +609,12 @@ function buildUi() {
               '</main>',
             '</div>',
             '<footer class="sal-footer">单次独立通信 · 仅角色卡及主世界书 · 本地保存，不读取聊天记忆</footer>',
-            '<section id="sal-image-preview" class="sal-image-preview" role="dialog" aria-label="信纸 PNG 预览与保存" hidden>',
-              '<div class="sal-preview-header"><strong>回信信纸 · PNG</strong><button id="sal-preview-close" type="button">关闭预览 ×</button></div>',
-              '<div id="sal-preview-hint" class="sal-preview-hint" aria-live="polite">长按图片或使用系统分享保存。</div>',
-              '<div class="sal-preview-image-wrap"><img id="sal-preview-image" alt="回信的 PNG 信纸，可长按图片保存" draggable="false"/></div>',
-              '<div class="sal-preview-footer">',
-                '<div class="sal-preview-pagination"><button id="sal-preview-prev" type="button">上一页</button><span id="sal-preview-count">1 / 1</span><button id="sal-preview-next" type="button">下一页</button></div>',
-                '<div class="sal-preview-actions"><button id="sal-preview-share-page" type="button">分享／保存本页</button><button id="sal-preview-share-all" type="button" hidden>分享全部 PNG</button><button id="sal-preview-open" type="button">打开原图</button></div>',
-              '</div>',
-            '</section>',
+
           '</div>',
         '</div>',
     ].join('');
     document.body.append(root);
+    studio = createLetterStudio({ panel: el('panel'), onStatus: status });
     panelLayout = attachMailboxPanel(el('overlay'), el('panel'), el('panel-header'));
     installNativeEntryPoints();
     attachMailboxLauncher(el('open'), () => { installNativeEntryPoints(); show(); });
@@ -727,7 +644,7 @@ function buildUi() {
     });
     document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && !el('overlay').hidden) {
-            if (!el('image-preview').hidden) { closeImagePreview(); return; }
+            if (studio?.visible) { studio.close(); return; }
             if (!el('recipient-results').hidden) closeRecipients();
             else hide();
         }
@@ -740,12 +657,6 @@ function buildUi() {
     el('detail-star').addEventListener('click', () => { if (state.current) void toggleStar(state.current.id); });
     el('copy').addEventListener('click', copyReply);
     el('image').addEventListener('click', () => void saveImage());
-    el('preview-close').addEventListener('click', closeImagePreview);
-    el('preview-prev').addEventListener('click', () => showImagePage(state.exportPage - 1));
-    el('preview-next').addEventListener('click', () => showImagePage(state.exportPage + 1));
-    el('preview-share-page').addEventListener('click', () => void shareReplyFiles(false));
-    el('preview-share-all').addEventListener('click', () => void shareReplyFiles(true));
-    el('preview-open').addEventListener('click', openOriginalImage);
     el('delete').addEventListener('click', () => void removeCurrent());
     el('api-refresh').addEventListener('click', () => {
         fillApiChoices();
