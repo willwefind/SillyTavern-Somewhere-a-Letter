@@ -120,7 +120,8 @@ function fillRecipients() {
 function renderRecipientLabel() {
     el('recipient-current').textContent = state.selected ? '当前收件人：' + selectedName() : '尚未选择收件人';
     el('compose-recipient').textContent = state.selected ? selectedName() : '尚未选择收件人';
-    el('nav-character').disabled = !state.selected;
+    // The character folder is the picker entry point on narrow screens.
+    el('nav-character').disabled = false;
     el('nav-character').title = state.selected ? '查看 ' + selectedName() + ' 的信箱' : '请先搜索并选择角色';
 }
 function closeRecipients() {
@@ -271,7 +272,7 @@ function renderArchive() {
         empty.className = 'sal-empty';
         empty.textContent = el('letter-search').value.trim() ? '没有搜索到符合条件的信件。'
             : state.view === 'starred' ? '还没有星标收藏的信。'
-                : state.view === 'character' ? '这位角色还没有往来信件。' : '还没有收到任何回信。';
+                : state.view === 'character' ? (state.selected ? '这位角色还没有往来信件。' : '请先在上方搜索并选择一位角色。') : '还没有收到任何回信。';
         container.append(empty);
         return;
     }
@@ -386,7 +387,7 @@ function setBusy(value) {
     el('send').textContent = value ? '正在等待回信…' : '寄出这封信';
     el('recipient-search').disabled = value;
     el('new').disabled = value;
-    for (const view of ['all', 'starred', 'character']) el('nav-' + view).disabled = value || (view === 'character' && !state.selected);
+    for (const view of ['all', 'starred', 'character']) el('nav-' + view).disabled = value;
     el('settings').disabled = value;
     closeRecipients();
 }
