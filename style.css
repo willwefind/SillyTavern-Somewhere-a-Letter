@@ -392,8 +392,29 @@
     border-top: 1px solid var(--sal-line);
 }
 @media (max-width: 760px) {
-    #sal-root .sal-overlay { padding: 0; }
-    #sal-root .sal-panel { width: 100%; max-height: 100dvh; height: 100dvh; min-height: 0; border: none; border-radius: 0; }
+    #sal-root .sal-overlay {
+        padding: 0;
+        display: block;
+        /* JS sets actual pixel width/height; don't rely on mobile html's height. */
+        inset: auto;
+        align-items: initial;
+        justify-content: initial;
+    }
+    #sal-root .sal-panel {
+        position: absolute;
+        width: auto;
+        height: auto;
+        max-height: none;
+        min-height: 0;
+        border: 1px solid var(--sal-line);
+        border-radius: 11px;
+        box-shadow: 0 12px 36px var(--sal-shadow);
+    }
+    #sal-root .sal-panel .sal-header {
+        cursor: grab;
+        touch-action: none;
+    }
+    #sal-root .sal-panel .sal-header:active { cursor: grabbing; }
     #sal-root .sal-header { padding: 11px 14px; flex-wrap: wrap; gap: 8px; }
     #sal-root .sal-brand { min-width: 0; flex: 1; }
     #sal-root .sal-brand h2 { font-size: 19px; margin: 3px 0 0; }
@@ -468,4 +489,66 @@
         padding-top: env(safe-area-inset-top, 0px);
         padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+}
+
+
+/* v0.2.3 — 何曾梦觉·随身册 style of viewport-fitted floating panel */
+@media (max-width: 760px) {
+    #sal-root .sal-overlay {
+        position: fixed;
+        /* Explicit left/top/size values are provided by src/panel.js. */
+        max-width: none;
+        max-height: none;
+        overflow: hidden;
+    }
+    #sal-root .sal-panel.sal-mobile-panel {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    #sal-root .sal-header {
+        flex: none;
+        padding: 9px 12px;
+        gap: 6px;
+        min-height: 52px;
+    }
+    #sal-root .sal-brand h2 { font-size: 17px; }
+    #sal-root .sal-brand small { font-size: 9px; }
+    #sal-root .sal-top-search { margin-top: 1px; }
+    #sal-root .sal-top-search input { min-height: 34px; padding: 7px 11px; font-size: 12px; }
+    #sal-root .sal-content { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+    #sal-root .sal-sidebar { padding: 7px 10px; gap: 5px; }
+    #sal-root .sal-new { min-height: 32px; padding: 6px 11px; font-size: 12px; }
+    #sal-root .sal-nav button { min-height: 31px; padding: 5px 7px; }
+    #sal-root .sal-nav button span { font-size: 11px; }
+    #sal-root .sal-recipient-area { padding-top: 5px; }
+    #sal-root .sal-main {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        padding: 13px 13px 21px;
+    }
+    #sal-root .sal-footer { display: none; }
+
+    /* Browse and read without dedicating half of the screen to recipient search. */
+    #sal-root:not([data-view="compose"]):not([data-view="character"]) .sal-recipient-area {
+        display: none;
+    }
+    #sal-root[data-view="reading"] .sal-sidebar,
+    #sal-root[data-view="settings"] .sal-sidebar {
+        display: none;
+    }
+    #sal-root[data-view="compose"] .sal-nav { display: none; }
+    #sal-root[data-view="reading"] .sal-top-search,
+    #sal-root[data-view="settings"] .sal-top-search,
+    #sal-root[data-view="compose"] .sal-top-search {
+        display: none !important;
+    }
+    #sal-root .sal-mail-row { padding: 2px 0; }
+    #sal-root .sal-mail-open { padding: 7px 5px; }
+    #sal-root .sal-mail-snippet { font-size: 11px; }
+    #sal-root .sal-letter { font-size: 14px; line-height: 1.75; }
+    #sal-root textarea { min-height: 155px; }
 }
