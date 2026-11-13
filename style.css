@@ -623,7 +623,7 @@
 
 /* v0.2.5: iOS PNG preview and explicit native share/save gestures.
    Preview is inside the already viewport-fitted mobile mailbox panel. */
-#sal-root .sal-panel { position: relative; }
+#sal-root .sal-panel:not(.sal-mobile-panel) { position: relative; }
 #sal-root .sal-image-preview {
     position: absolute;
     z-index: 30;
