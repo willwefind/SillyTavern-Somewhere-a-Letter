@@ -513,12 +513,12 @@ function show() {
     updateNav();
     el('close').focus();
 }
-function hide() {
+function hide(restoreFocus = true) {
     if (state.busy) return;
     closeRecipients();
     el('overlay').hidden = true;
     el('open').setAttribute('aria-expanded', 'false');
-    el('open').focus();
+    if (restoreFocus) el('open').focus();
 }
 /**
  * Provide two additional entry points for SillyTavern's mobile UI:
@@ -610,7 +610,7 @@ function buildUi() {
     document.addEventListener('pointerdown', event => {
         if (window.innerWidth > 760 || el('overlay').hidden || state.busy) return;
         if (el('panel').contains(event.target) || el('open').contains(event.target)) return;
-        hide();
+        hide(false);
     }, true);
     el('theme').addEventListener('click', () => applyTheme(prefs.theme === 'dark' ? 'light' : 'dark'));
     el('theme-choice').addEventListener('change', () => applyTheme(el('theme-choice').value));
