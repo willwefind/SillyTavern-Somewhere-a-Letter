@@ -1,5 +1,6 @@
 import { recipients, generateLetter } from './src/engine.js';
 import { apiChoices, apiProfileStatus } from './src/api.js';
+import { attachMailboxLauncher } from './src/launcher.js';
 import { saveLetter, deleteLetter, listAllLetters } from './src/storage.js';
 import { getDraft, saveDraft, clearDraft } from './src/drafts.js';
 import { createBackup, downloadJson, restoreBackup } from './src/backup.js';
@@ -542,7 +543,7 @@ function buildUi() {
     root.id = 'sal-root';
     root.dataset.theme = prefs.theme;
     root.innerHTML = [
-        '<button id="sal-open" class="sal-float" type="button" aria-expanded="false" title="世界某处的来信">✉ <span>信箱</span></button>',
+        '<button id="sal-open" class="sal-float" type="button" aria-expanded="false" aria-label="打开世界某处的来信" title="打开信箱 · 按住可拖动"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3.5 6.5 8.5 6 8.5-6"></path></svg></button>',
         '<div id="sal-overlay" class="sal-overlay" hidden>',
           '<div class="sal-panel" role="dialog" aria-modal="true" aria-label="世界某处的来信">',
             '<header class="sal-header">',
@@ -594,7 +595,7 @@ function buildUi() {
     ].join('');
     document.body.append(root);
     installNativeEntryPoints();
-    el('open').addEventListener('click', () => { installNativeEntryPoints(); show(); });
+    attachMailboxLauncher(el('open'), () => { installNativeEntryPoints(); show(); });
     el('close').addEventListener('click', hide);
     el('overlay').addEventListener('click', event => { if (event.target === el('overlay')) hide(); });
     el('theme').addEventListener('click', () => applyTheme(prefs.theme === 'dark' ? 'light' : 'dark'));
